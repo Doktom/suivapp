@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ground: #f5f6f2;
+  --color-surface: #ffffff;
+  --color-ink: #20261f;
+  --color-muted: #596159;
+  --color-line: #e2e5dd;
+  --color-track: #dfe3da;
+  --color-chip: #e8ebe3;
+  --color-accent: #3f6b52;
+  --color-warn: #85500f;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', Inter, sans-serif;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}

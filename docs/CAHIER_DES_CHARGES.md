@@ -78,7 +78,7 @@ Supprimer une famille qui contient des habitudes demande de les déplacer ou de 
 **Séries (streaks)**
 - Série actuelle et meilleure série par habitude.
 - Pour les fréquences « X fois par semaine », la série se compte en semaines réussies.
-- **1 jour de grâce par semaine** et par habitude : un oubli isolé ne casse pas la série. Il s'applique automatiquement et reste visible dans l'historique.
+- **1 jour de grâce par semaine** et par habitude : un oubli isolé ne casse pas la série. Il s'applique automatiquement et reste visible dans l'historique. Pour un quota hebdomadaire, cela revient à pardonner une séance manquée, avec au moins une séance réalisée dans la semaine.
 
 ### 3.3 Catalogue d'habitudes
 
@@ -150,7 +150,7 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
   - habitude simple : 10 XP ;
   - habitude nuancée : XP proportionnelle à l'objectif atteint, avec un bonus par palier ;
   - routine : 10 XP + 2 XP par étape ;
-  - tâche : 5 / 10 / 20 XP selon la priorité ; bloc terminé : bonus de 25 XP ;
+  - tâche : 5 / 10 / 20 XP selon la priorité ; sous-tâche d'un bloc : 5 XP ; bloc terminé : bonus de 25 XP ;
   - bonus de série : +10 % à 7 jours, +25 % à 30 jours, +50 % à 100 jours.
 - Niveau global : XP nécessaire pour le niveau suivant = 100 × niveau^1,5 (valeurs réglables).
 - Barre d'XP toujours visible.
@@ -240,7 +240,7 @@ Succès          (id, code, débloqué_le)
 **V0.1 — MVP (mécaniques de base)**
 - Authentification.
 - Familles par défaut, modifiables.
-- Habitudes : types simple, durée, quantité ; fréquences quotidienne, jours de la semaine, X fois par semaine ; moments matin / soir.
+- Habitudes : types simple, durée, quantité ; fréquences quotidienne, jours de la semaine, X fois par semaine ; moments matin / journée / soir.
 - Catalogue d'habitudes (ajout en un clic, ajout de modèles perso).
 - Vue Aujourd'hui, séries avec jour de grâce, bascule de journée à 4 h.
 - XP, niveau global, caractéristiques (affichage simple).
