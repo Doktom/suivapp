@@ -6,7 +6,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches et
 La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avant toute nouvelle tâche et la mettre à jour quand une décision est prise.
 
 ## État actuel
-- Phase : **MVP V0.1 codé** (mobile et PC). Reste à brancher Supabase (voir README) ; ensuite V0.2.
+- Phase : **MVP V0.1 codé** (mobile et PC). Supabase branché en production, connexion validée. Prochaine étape : V0.2.
 - Sans variables Supabase, l'app tourne en mode démo (localStorage). Règles métier testées dans `src/domain/`.
 - Workflow : `git pull` au début, push sur `main` à la fin (déploie la prod sur GitHub Pages). Fichier de reprise `.md` seulement si demandé en fin de session.
 - Dépôt GitHub : `Doktom/suivapp`.
