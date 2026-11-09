@@ -84,5 +84,8 @@ begin
   foreach t in array array['families','habit_templates','habits','validations','task_lists','tasks','profile'] loop
     execute format('alter table %I enable row level security', t);
     execute format('create policy owner_only on %I for all using (auth.uid() = user_id) with check (auth.uid() = user_id)', t);
+    execute format('grant select, insert, update, delete on %I to authenticated', t);
   end loop;
 end $$;
+
+notify pgrst, 'reload schema';
