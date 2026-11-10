@@ -10,13 +10,13 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d
 ## État actuel (2026-11-10)
 - **V0.1 et V0.2 codées**, **V0.3 Entraînement : étapes 1 à 4 codées** (sport, suivi du sport, mobilité, danse). **Prochaine étape : V0.3 étape 5, le côté ludique** (détail dans `docs/REPRISE.md`).
 - Version `package.json` : 0.3.0. 59 tests (Vitest) au vert, build OK.
-- Sans variables Supabase, l'app tourne en **mode démo** (localStorage).
+- **Phase de test** : le site GitHub Pages est construit **sans Supabase**, donc sans connexion ; les données restent dans le navigateur. Version finale prévue sur le serveur privé **atj-app.com** (o2switch, PHP + SQLite, sans login) : voir `docs/REPRISE.md`.
 
 ## Façon de travailler avec l'utilisateur
 - Échanges, documentation et textes de l'interface **en français** ; code (noms, commentaires) **en anglais**.
 - Pour une demande ouverte (« améliore », « propose ») : **proposer d'abord** une liste priorisée, attendre son choix, puis coder.
 - Rester **simple** : il a refusé le suivi trop détaillé (verres d'eau, nombre de pas). Le sur-mesure est réservé à l'Entraînement.
-- **Livraison** : il préfère recevoir un **zip** et l'envoyer lui-même sur GitHub (« Add file → Upload files »). Commiter en local, ne **pas pousser** sans demande explicite. Rappeler les migrations SQL à lancer **avant** l'envoi.
+- **Livraison (phase de test)** : il construit et teste l'app au fur et à mesure sur GitHub Pages. Claude **pousse sur `main`** une fois l'étape validée (tests + build verts) ; le site se redéploie seul. Le zip via l'interface web de GitHub a échoué (dossiers non envoyés) : ne plus le proposer.
 - En fin d'étape : tests + build + essai dans le navigateur (mobile 375 px et PC, console sans erreur), puis mise à jour de `CLAUDE.md`, du cahier des charges et de `docs/REPRISE.md`.
 
 ## Commandes
@@ -109,3 +109,4 @@ docs/                        CAHIER_DES_CHARGES.md, REPRISE.md
 - 2026-11-10 : « /15 » = par côté (unilatéral) ou 2e mouvement enchaîné (add / abd) ; finisher = bibliothèque de WODs au choix + tirage au hasard ; danse = cours fixes, soirées, pratique, temps, figures, objectifs avec moyens d'y arriver ; programme maison à faire plus tard. Étapes V0.3 : 1 sport, 2 suivi du sport, 3 mobilité, 4 danse, 5 ludique.
 - 2026-11-10 : XP entraînement : séance de sport 20 + 2 / série + 5 échauffement + 3 / tour de circuit + 10 finisher ; mobilité 10 + 1 / étape ; danse : cours 20, soirée 25, pratique 2 / 10 min (max 20), figure maîtrisée 15, objectif atteint 50. Caractéristiques : Force (sport), Souplesse (mobilité), Grâce (danse).
 - 2026-11-10 : point d'étape. `supabase/schema.sql` devient le schéma complet (installation neuve en un fichier) ; les migrations servent aux mises à jour. Filet d'erreur d'affichage (`ErrorBoundary`). Fichier de reprise `docs/REPRISE.md` et commande `/reprise`.
+- 2026-11-10 : plus de connexion par e-mail. Phase de test sur GitHub Pages sans Supabase (données dans le navigateur, export JSON pour sauvegarder) ; Claude pousse directement sur `main`. Version finale à la toute fin sur atj-app.com (o2switch : PHP + SQLite, dossier protégé par mot de passe via cPanel, pas d'écran de connexion, import de l'export JSON).

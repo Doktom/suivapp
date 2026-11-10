@@ -21,7 +21,7 @@ La motivation repose sur une **progression de type RPG** : chaque action rapport
 | Hors-ligne | Non requis. |
 | Synchro agenda externe | Non (Google Calendar éventuellement plus tard). |
 | Code source | Dépôt GitHub public `Doktom/suivapp`, avec les fichiers Claude (`CLAUDE.md`) pour reprendre le travail depuis n'importe quel PC. |
-| Données | Privées : protégées par authentification, **jamais** stockées dans le dépôt. |
+| Données | Privées, **jamais** stockées dans le dépôt. Phase de test : dans le navigateur. Version finale : sur le serveur privé, protégé par mot de passe au niveau du serveur (pas d'écran de connexion). |
 | Début de journée | La journée bascule à **4 h du matin** : une validation à 1 h compte pour la veille. Réglable. |
 
 ## 3. Périmètre fonctionnel
@@ -299,8 +299,8 @@ Pas de table pour les caractéristiques ni le niveau : ils se calculent à parti
 | Interface | **React + TypeScript + Vite** | Standard, rapide, très bien outillé. |
 | Style | **Tailwind CSS v4** + composants maison (`src/components/ui.tsx`) | Rendu sobre, thème clair / sombre par variables CSS. |
 | Agenda | **Composant maison** | Léger, sur mesure (bandeau « cette semaine », états fait / manqué / grâce). |
-| Données + connexion | **Supabase** (Postgres + Auth, offre gratuite) | Données privées protégées par Row Level Security ; accessibles depuis le téléphone et le PC. |
-| Hébergement | **GitHub Pages** (gratuit) | Déploiement automatique à chaque push sur `main` (`.github/workflows/deploy.yml`, tests compris). |
+| Données | Phase de test : **navigateur** (localStorage). Version finale : **PHP + SQLite** sur atj-app.com. Supabase abandonné. | Pas de login à gérer ; synchronisation téléphone / PC par le serveur privé ; sauvegarde = un fichier. |
+| Hébergement | Phase de test : **GitHub Pages** (déploiement automatique à chaque push sur `main`, tests compris). Version finale : **atj-app.com** (o2switch, envoi par FTP). | Tester au fur et à mesure, puis héberger chez soi. |
 | Installation sur téléphone | **PWA** (icône sur l'écran d'accueil, sans mode hors-ligne) **[V0.4]** | Effet « vraie app » sans store ; nécessaire pour les notifications. |
 | Graphiques | **SVG maison** (`src/training/Charts.tsx`) | Deux formes simples (courbe, barres), sans dépendance. |
 

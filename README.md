@@ -2,7 +2,7 @@
 
 Webapp personnelle pour tenir ses **habitudes**, ses **tâches**, son **agenda** et son **entraînement** (sport, mobilité, danse), avec une progression ludique de style RPG : XP, niveaux et caractéristiques (Force, Souplesse, Grâce…).
 
-Production : <https://doktom.github.io/suivapp/> (déployée à chaque envoi sur `main`).
+Version de test : <https://doktom.github.io/suivapp/> (déployée à chaque envoi sur `main`, sans connexion : les données restent dans le navigateur). Version finale prévue sur un serveur privé (voir [docs/REPRISE.md](docs/REPRISE.md)).
 
 ## Ce que fait l'app
 
@@ -31,7 +31,9 @@ Sans fichier `.env.local`, l'app tourne en **mode démo** : les données restent
 
 Stack : React + TypeScript + Vite, Tailwind CSS v4, Supabase (Postgres + Auth + RLS), tests Vitest, hébergement GitHub Pages. Organisation du code : voir [`CLAUDE.md`](CLAUDE.md).
 
-## Base de données Supabase
+## Base de données Supabase (abandonnée, gardée pour mémoire)
+
+Le site de test n'utilise plus Supabase. Les instructions ci-dessous ne servent que si on le rebranche.
 
 **Nouvelle installation** (une fois) :
 1. Créer un projet sur [supabase.com](https://supabase.com).

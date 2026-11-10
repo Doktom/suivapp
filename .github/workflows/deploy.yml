@@ -25,10 +25,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # Test phase: built without Supabase, so no sign-in and data stays in each browser.
+      # The final version will run on the private server (see docs/REPRISE.md).
       - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

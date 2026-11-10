@@ -93,7 +93,7 @@ export function Layout({ route, error, children }: { route: Route; error: string
       </nav>
 
       <div className="min-w-0 flex-1 pb-24 lg:pb-8">
-        {isDemo && <p className="bg-chip px-5 py-2 text-center text-xs text-muted">Mode démo : les données restent dans ce navigateur.</p>}
+        {isDemo && <p className="bg-chip px-5 py-2 text-center text-xs text-muted">Version de test : les données restent dans ce navigateur (Réglages → Exporter mes données pour les sauvegarder).</p>}
         {error && <p role="alert" className="bg-warn px-5 py-2 text-center text-sm text-white">{error}</p>}
         <div className="flex justify-end gap-1 px-3 pt-2 lg:hidden">
           {MORE.map(([r, label]) => (
