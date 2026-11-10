@@ -111,8 +111,9 @@ function AvoidEditor({ avoid, onChange }: { avoid: Avoid; onChange: (avoid: Avoi
 }
 
 export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; onClose: () => void }) {
-  const { data, save } = useStore()
+  const { data, save, removeHabit } = useStore()
   const today = useToday()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const families = [...data.families].sort((a, b) => a.position - b.position)
   const existingId = habit?.id
   const [name, setName] = useState(habit?.name ?? '')
@@ -311,6 +312,20 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
         {tracking === 'routine' && steps.every((s) => !s.name.trim()) && <p className="text-sm text-warn">Ajoutez au moins une étape.</p>}
         <Button type="submit" variant="primary" disabled={invalid}>Enregistrer</Button>
         <Button onClick={saveAsTemplate} disabled={invalid}>Enregistrer comme modèle</Button>
+        {existingId && !confirmDelete && (
+          <Button className="text-warn" onClick={() => setConfirmDelete(true)}>Supprimer l'habitude…</Button>
+        )}
+        {existingId && confirmDelete && (
+          <div role="alert" className="flex flex-col gap-2 rounded-lg border border-warn p-3">
+            <p className="text-sm">
+              Supprimer « {habit?.name} » et tout son historique (validations, écarts, XP gagnée) ? C'est définitif. Pour simplement l'arrêter, utilisez plutôt « Archiver ».
+            </p>
+            <div className="flex gap-2">
+              <Button className="!bg-warn !text-white" onClick={() => { removeHabit(habit as Habit); onClose() }}>Supprimer définitivement</Button>
+              <Button onClick={() => setConfirmDelete(false)}>Garder</Button>
+            </div>
+          </div>
+        )}
       </form>
     </Dialog>
   )

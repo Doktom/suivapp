@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { newTask, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from './automation'
 import { addDays, addMonths, logicalDay, mondayOf, weekday } from './date'
 import { describeFrequency, weekdaysPreset } from './describe'
 import { fixedOccurrences, nextDate } from './recurrence'
 import { indexValidations, isAvoidOk, isAvoidSettled, isDueOn, reachedLevel, slipCounts } from './schedule'
 import { computeStreak } from './streak'
-import type { Avoid, Frequency, Habit, Slip, Validation } from './types'
+import type { Avoid, Frequency, Habit, Slip, Task, Validation } from './types'
 import { levelFromXp, levelsValidationXp, levelXp, routineXp, streakBonus, validationXp, xpForNextLevel } from './xp'
 
 const habit = (frequency: Frequency = { type: 'daily' }, overrides: Partial<Habit> = {}): Habit => ({
@@ -140,7 +141,7 @@ describe('V0.2 — dates et fréquences', () => {
 
 describe('V0.2 — niveaux et routines', () => {
   it('donne 10 / 15 / 20 XP selon le niveau', () => {
-    expect([0, 1, 2, 3].map(levelXp)).toEqual([0, 10, 15, 20])
+    expect([0, 1, 2, 3].map((n) => levelXp(n))).toEqual([0, 10, 15, 20])
     expect(levelsValidationXp(3, 7)).toBe(22)
   })
   const routineHabit = habit(undefined, {
@@ -212,5 +213,39 @@ describe('fréquences en semaine / week-end', () => {
   it('planifie le week-end seulement samedi et dimanche', () => {
     const h = habit({ type: 'weekdays', days: [5, 6] })
     expect(['2026-11-13', '2026-11-14', '2026-11-15'].map((d) => isDueOn(h, done(), d))).toEqual([false, true, true])
+  })
+})
+
+describe('automatismes', () => {
+  const task = (fields: Partial<Task> & Pick<Task, 'title'>) => newTask(fields)
+  it('crédite les jours tenus et retire ceux qui ont dépassé la tolérance', () => {
+    const h = habit(undefined, { tracking: 'avoid', moments: ['day'], start_date: '2026-11-08', avoid: { before: null, after: null, tolerance: 0, period: 'day' } })
+    const credited: Validation = { id: 'v9', habit_id: 'h', day: '2026-11-09', moment: 'day', value: 1, steps: [], xp_earned: 10 }
+    const slips: Slip[] = [{ id: 's', habit_id: 'h', day: '2026-11-09', time: '10:00' }]
+    const plan = planAvoidCredits([h], indexValidations([credited]), slips, '2026-11-10', '09:00')
+    expect(plan.credit.map((c) => c.day)).toEqual(['2026-11-08'])
+    expect(plan.drop).toEqual(['v9'])
+  })
+  it('fait revenir une tâche à date fixe et chaîne les occurrences', () => {
+    const rent = task({ title: 'Loyer', due_date: '2026-10-05', recurrence: { mode: 'fixed', interval: 1, unit: 'month' } })
+    const [plan] = planFixedRecurrences([rent], '2026-11-10')
+    expect(plan.rows.map((t) => [t.due_date, !!t.recurrence])).toEqual([['2026-10-05', false], ['2026-11-05', false], ['2026-12-05', true]])
+    expect(plan.rows[2].previous_id).toBe(plan.rows[1].id)
+  })
+  it('crée la suivante après réalisation, avec ses sous-tâches remises à zéro', () => {
+    const block = task({ title: 'Ménage', recurrence: { mode: 'after', interval: 1, unit: 'week' }, completed_at: 'x' })
+    const step = task({ title: 'Aspirateur', parent_id: block.id, completed_at: 'x' })
+    const rows = planAfterCompletion(block, [block, step], '2026-11-10')
+    expect(rows[0].recurrence).toBe(null)
+    expect(rows[1]).toMatchObject({ due_date: '2026-11-17', previous_id: block.id, completed_at: null })
+    expect(rows[2]).toMatchObject({ title: 'Aspirateur', parent_id: rows[1].id, completed_at: null })
+  })
+  it('annule la suivante si on rouvre la tâche, tant qu’elle est intacte', () => {
+    const done = task({ title: 'Draps', completed_at: 'x' })
+    const [, next] = planAfterCompletion({ ...done, recurrence: { mode: 'after', interval: 2, unit: 'week' } }, [done], '2026-11-10')
+    const plan = planReopen(done, [done, next])
+    expect(plan?.remove.map((t) => t.id)).toEqual([next.id])
+    expect(plan?.restore.recurrence).toEqual(next.recurrence)
+    expect(planReopen(done, [done, { ...next, completed_at: 'y' }])).toBe(null)
   })
 })

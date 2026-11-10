@@ -27,4 +27,4 @@ Sans fichier `.env.local`, l'app tourne en **mode démo** : les données restent
 
 ## Passer une base V0.1 en V0.2
 
-Avant de déployer la V0.2, exécuter une fois [`supabase/migration_v0.2.sql`](supabase/migration_v0.2.sql) dans l'éditeur SQL de Supabase. Les données existantes sont conservées ; les nouveaux modèles du catalogue s'ajoutent tout seuls au premier chargement.
+Avant de déployer la V0.2, exécuter [`supabase/migration_v0.2.sql`](supabase/migration_v0.2.sql) dans l'éditeur SQL de Supabase (le script peut être relancé sans risque après une mise à jour). Les données existantes sont conservées ; les nouveaux modèles du catalogue s'ajoutent tout seuls au premier chargement.

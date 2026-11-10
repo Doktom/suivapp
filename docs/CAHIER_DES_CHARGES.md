@@ -83,7 +83,8 @@ Principe : rester **simple**. On ne cherche pas à mesurer finement (litres d'ea
 **Suivi au quotidien**
 - Vue « Aujourd'hui » : habitudes du jour groupées par moment (matin / journée / soir) ou par famille, validables en un geste.
 - Pour les types nuancés : saisie rapide de la valeur (boutons +/−, curseur, paliers).
-- Correction possible des 7 derniers jours.
+- Correction possible des 14 derniers jours (aujourd'hui compris).
+- Chaque action peut être annulée quelques secondes (bandeau « Annuler »).
 
 **Séries (streaks)**
 - Série actuelle et meilleure série par habitude.

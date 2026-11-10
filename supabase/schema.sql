@@ -85,6 +85,8 @@ create table tasks (
   due_date date,
   priority text not null default 'normal' check (priority in ('low', 'normal', 'high')),
   recurrence jsonb,
+  previous_id uuid,
+  checklist_id uuid,
   completed_at timestamptz,
   xp_earned int not null default 0
 );
@@ -112,7 +114,8 @@ create table events (
 create table profile (
   id uuid primary key,
   user_id uuid not null unique default auth.uid() references auth.users on delete cascade,
-  day_rollover_hour int not null default 4 check (day_rollover_hour between 0 and 12)
+  day_rollover_hour int not null default 4 check (day_rollover_hour between 0 and 12),
+  xp jsonb
 );
 
 do $$

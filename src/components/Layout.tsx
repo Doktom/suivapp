@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { isDemo } from '../data/repo'
+import { useUndo } from '../data/store'
 
 export type Route = 'today' | 'habits' | 'tasks' | 'agenda' | 'progress' | 'settings'
 
@@ -42,6 +43,27 @@ const NAV: [Route, string][] = [
   ['settings', 'Réglages'],
 ]
 
+/** How long the "Annuler" banner stays. */
+const UNDO_MS = 6000
+
+function UndoBanner() {
+  const { entry, undo, dismiss } = useUndo()
+  useEffect(() => {
+    if (!entry) return
+    const timer = setTimeout(dismiss, UNDO_MS)
+    return () => clearTimeout(timer)
+    // Restart the timer for each new action only, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry?.at])
+  if (!entry) return null
+  return (
+    <div role="status" className="fixed inset-x-3 bottom-[84px] z-10 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-ink py-1.5 pr-1.5 pl-4 text-sm text-ground shadow-lg lg:bottom-6">
+      <span className="min-w-0 flex-1 truncate">{entry.label}</span>
+      <button type="button" className="min-h-11 rounded-lg px-3 font-semibold" onClick={undo}>Annuler</button>
+    </div>
+  )
+}
+
 const Icon = ({ route }: { route: Route }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {ICONS[route]}
@@ -67,6 +89,8 @@ export function Layout({ route, error, children }: { route: Route; error: string
         {error && <p role="alert" className="bg-warn px-5 py-2 text-center text-sm text-white">{error}</p>}
         <main className="mx-auto max-w-5xl px-5 pt-6 lg:px-10 lg:pt-10">{children}</main>
       </div>
+
+      <UndoBanner />
 
       <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
         {NAV.map(([r, label]) => (

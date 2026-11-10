@@ -38,6 +38,8 @@ export function TaskItem({ task, today, editable = false }: { task: Task; today:
       due_date: null,
       priority: 'normal',
       recurrence: null,
+      previous_id: null,
+      checklist_id: null,
       completed_at: null,
       xp_earned: 0,
     } satisfies Task)

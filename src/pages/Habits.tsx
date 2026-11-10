@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { HabitDialog } from '../components/HabitDialog'
 import { Button, Dialog, FamilyCard, SectionTitle, tint } from '../components/ui'
-import { useStore, useToday, useValidationIndex } from '../data/store'
+import { useStore, useStreaks, useToday, useValidationIndex } from '../data/store'
 import { addDays } from '../domain/date'
 import { isPaused } from '../domain/schedule'
 import { computeStreak, STREAK_UNIT } from '../domain/streak'
@@ -12,7 +12,7 @@ function HabitLine({ habit, onEdit }: { habit: Habit; onEdit: () => void }) {
   const { save } = useStore()
   const today = useToday()
   const index = useValidationIndex()
-  const streak = computeStreak(habit, index, today)
+  const streak = useStreaks().get(habit.id) ?? computeStreak(habit, index, today)
   const paused = isPaused(habit, today)
   const unit = STREAK_UNIT[streak.unit]
   const tracking = describeTracking(habit)
@@ -67,7 +67,7 @@ function Catalog({ onClose }: { onClose: () => void }) {
   return (
     <Dialog title="Catalogue d'habitudes" onClose={onClose}>
       <div className="flex flex-wrap gap-1.5 pb-3" role="group" aria-label="Familles">
-        <button type="button" aria-pressed={shown === null} onClick={() => setShown(null)} className={`min-h-9 rounded-full px-3 text-[13px] font-medium ${shown === null ? 'bg-ink text-white' : 'bg-chip'}`}>Toutes</button>
+        <button type="button" aria-pressed={shown === null} onClick={() => setShown(null)} className={`min-h-9 rounded-full px-3 text-[13px] font-medium ${shown === null ? 'bg-accent text-white' : 'bg-chip'}`}>Toutes</button>
         {families.map((f) => (
           <button key={f.id} type="button" aria-pressed={shown === f.id} onClick={() => setShown(shown === f.id ? null : f.id)} className="flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium" style={{ background: shown === f.id ? f.color : tint(f.color, 18), color: shown === f.id ? '#fff' : undefined }}>
             {shown !== f.id && <span className="size-2 rounded-full" style={{ background: f.color }} aria-hidden="true" />}

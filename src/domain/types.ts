@@ -119,6 +119,10 @@ export interface Task {
   priority: Priority
   /** Only the latest occurrence of a recurring task carries its recurrence. */
   recurrence: Recurrence | null
+  /** The occurrence this one was created from, for recurring tasks. */
+  previous_id: string | null
+  /** The checklist this block was launched from. */
+  checklist_id: string | null
   completed_at: string | null
   xp_earned: number
 }
@@ -142,9 +146,23 @@ export interface CalendarEvent {
   color: string
 }
 
+/** XP values, adjustable in the settings. They apply to validations made after a change. */
+export interface XpSettings {
+  habit: number
+  level_step: number
+  routine_step: number
+  task_low: number
+  task_normal: number
+  task_high: number
+  subtask: number
+  block_bonus: number
+  streak_bonus: boolean
+}
+
 export interface Profile {
   id: string
   day_rollover_hour: number
+  xp: XpSettings | null
 }
 
 export const MOMENTS: Moment[] = ['morning', 'day', 'evening']

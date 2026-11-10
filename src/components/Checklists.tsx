@@ -51,7 +51,7 @@ export function Checklists() {
   const [editing, setEditing] = useState<Checklist | null>(null)
   const [creating, setCreating] = useState(false)
   const [launched, setLaunched] = useState<string[]>([])
-  const running = (c: Checklist) => data.tasks.some((t) => !t.parent_id && t.title === c.name && !t.completed_at)
+  const running = (c: Checklist) => data.tasks.some((t) => !t.parent_id && t.checklist_id === c.id && !t.completed_at)
 
   return (
     <section className="max-w-3xl pt-8">

@@ -1,17 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { newTask, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from '../domain/automation'
 import { buildSeed, syncCatalog } from '../domain/catalog'
-import { addDays, clockTime, logicalDay } from '../domain/date'
-import { fixedOccurrences, nextDate } from '../domain/recurrence'
-import {
-  getValidation,
-  indexValidations,
-  isActiveOn,
-  isAvoidOk,
-  isAvoidSettled,
-  isScheduledDay,
-  reachedLevel,
-} from '../domain/schedule'
-import { computeStreak, streakDays } from '../domain/streak'
+import { clockTime, logicalDay } from '../domain/date'
+import { getValidation, indexValidations, isAvoidOk, isAvoidSettled, isDayDone, reachedLevel, routineLevels } from '../domain/schedule'
+import { computeStreak, streakDays, type Streak } from '../domain/streak'
 import {
   normalizeShape,
   type CalendarEvent,
@@ -21,13 +13,13 @@ import {
   type HabitTemplate,
   type Moment,
   type Profile,
-  type Recurrence,
   type Slip,
   type Task,
   type TaskList,
   type Validation,
+  type XpSettings,
 } from '../domain/types'
-import { BLOCK_BONUS_XP, levelsValidationXp, routineXp, SUBTASK_XP, TASK_XP, validationXp } from '../domain/xp'
+import { DEFAULT_XP, levelsValidationXp, routineXp, taskXp, validationXp } from '../domain/xp'
 import { repo, type Row, type Table } from './repo'
 
 export interface Data {
@@ -45,8 +37,14 @@ export interface Data {
 
 const TABLES: Table[] = ['families', 'habit_templates', 'habits', 'validations', 'slips', 'task_lists', 'tasks', 'checklists', 'events', 'profile']
 
-/** How far back unsettled "avoid" days are credited. */
-const AVOID_LOOKBACK_DAYS = 30
+const MIGRATION_MESSAGE =
+  "La base Supabase n'est pas à jour : exécutez supabase/migration_v0.2.sql dans l'éditeur SQL de Supabase, puis rechargez la page."
+
+/** Errors raised when the database lacks a table or a column of this version. */
+function isSchemaError(e: unknown): boolean {
+  const err = e as { code?: string; message?: string } | null
+  return ['42P01', '42703', 'PGRST204', 'PGRST205'].includes(err?.code ?? '') || /does not exist|could not find/i.test(err?.message ?? '')
+}
 
 /** Rows saved before V0.2 lack its fields. */
 function normalize(d: Data): Data {
@@ -55,29 +53,27 @@ function normalize(d: Data): Data {
     habits: d.habits.map(normalizeShape),
     habit_templates: d.habit_templates.map(normalizeShape),
     validations: d.validations.map((v) => ({ ...v, steps: v.steps ?? [] })),
-    tasks: d.tasks.map((t) => ({ ...t, recurrence: t.recurrence ?? null })),
+    tasks: d.tasks.map((t) => ({ ...t, recurrence: t.recurrence ?? null, previous_id: t.previous_id ?? null, checklist_id: t.checklist_id ?? null })),
+    profile: d.profile.map((p) => ({ ...p, xp: p.xp ?? null })),
   }
 }
 
-const newTask = (fields: Partial<Task> & Pick<Task, 'title'>): Task => ({
-  id: crypto.randomUUID(),
-  list_id: null,
-  parent_id: null,
-  note: '',
-  due_date: null,
-  priority: 'normal',
-  recurrence: null,
-  completed_at: null,
-  xp_earned: 0,
-  ...fields,
-})
+/** What "Annuler" puts back: the state of each row before the action. */
+interface UndoEntry {
+  label: string
+  at: number
+  ops: { table: Table; id: string; before: Row | null }[]
+}
 
 function useStoreValue() {
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [now, setNow] = useState(() => new Date())
+  const [undoEntry, setUndoEntry] = useState<UndoEntry | null>(null)
   // Writes run one after another so that a row always reaches the server after its parents.
   const queue = useRef(Promise.resolve())
+  // While an undoable action runs, the rows it touches and their previous state.
+  const recorder = useRef<Map<string, UndoEntry['ops'][number]> | null>(null)
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000)
@@ -85,19 +81,49 @@ function useStoreValue() {
   }, [])
 
   const enqueue = (write: () => Promise<void>) => {
-    queue.current = queue.current.then(write).catch(() => {
-      setError("Une modification n'a pas pu être enregistrée. Rechargez la page.")
+    queue.current = queue.current.then(write).catch((e) => {
+      setError(isSchemaError(e) ? MIGRATION_MESSAGE : "Une modification n'a pas pu être enregistrée. Rechargez la page.")
     })
   }
 
+  const record = (table: Table, id: string) => {
+    const key = `${table}|${id}`
+    if (!recorder.current || recorder.current.has(key) || !data) return
+    const before = (data[table] as Row[]).find((r) => r.id === id) ?? null
+    recorder.current.set(key, { table, id, before })
+  }
+
   const save = <K extends Table>(table: K, row: Data[K][number]) => {
+    record(table, row.id)
     setData((d) => d && { ...d, [table]: [...(d[table] as Row[]).filter((r) => r.id !== row.id), row] })
     enqueue(() => repo.upsert(table, row))
   }
 
   const remove = (table: Table, id: string) => {
+    record(table, id)
     setData((d) => d && { ...d, [table]: (d[table] as Row[]).filter((r) => r.id !== id) })
     enqueue(() => repo.remove(table, id))
+  }
+
+  /** Runs an action and offers to undo it for a few seconds. */
+  const track = (label: string, action: () => void) => {
+    recorder.current = new Map()
+    try {
+      action()
+    } finally {
+      const ops = [...recorder.current.values()]
+      recorder.current = null
+      if (ops.length > 0) setUndoEntry({ label, at: Date.now(), ops })
+    }
+  }
+
+  const undo = () => {
+    if (!undoEntry) return
+    for (const op of [...undoEntry.ops].reverse()) {
+      if (op.before) save(op.table, op.before as never)
+      else remove(op.table, op.id)
+    }
+    setUndoEntry(null)
   }
 
   // React's StrictMode runs effects twice; the first-run seed must only happen once.
@@ -111,7 +137,7 @@ function useStoreValue() {
       const loaded = normalize(Object.fromEntries(TABLES.map((t, i) => [t, rows[i]])) as unknown as Data)
       if (loaded.profile.length === 0) {
         const seed = buildSeed()
-        const profile: Profile = { id: crypto.randomUUID(), day_rollover_hour: 4 }
+        const profile: Profile = { id: crypto.randomUUID(), day_rollover_hour: 4, xp: null }
         for (const f of seed.families) await repo.upsert('families', f)
         for (const t of seed.habit_templates) await repo.upsert('habit_templates', t)
         for (const l of seed.task_lists) await repo.upsert('task_lists', l)
@@ -127,10 +153,11 @@ function useStoreValue() {
       }
       setData(loaded)
     }
-    load().catch(() => setError('Impossible de charger vos données.'))
+    load().catch((e) => setError(isSchemaError(e) ? MIGRATION_MESSAGE : 'Impossible de charger vos données.'))
   }, [])
 
   const today = data ? logicalDay(now, data.profile[0].day_rollover_hour) : ''
+  const xp: XpSettings = { ...DEFAULT_XP, ...(data?.profile[0].xp ?? {}) }
 
   const streakDaysBefore = (habit: Habit, day: string) => {
     const others = indexValidations(data!.validations.filter((v) => v.day !== day))
@@ -138,10 +165,11 @@ function useStoreValue() {
     return streakDays(streak) + (streak.unit === 'days' ? 1 : 0)
   }
 
+  const findValidation = (habit: Habit, day: string, moment: Moment) => getValidation(indexValidations(data!.validations), habit.id, day, moment)
+
   /** Simple, duration, quantity and levels habits. For levels, the value is the level reached. */
-  const setValidation = (habit: Habit, day: string, moment: Moment, value: number) => {
-    if (!data) return
-    const existing = getValidation(indexValidations(data.validations), habit.id, day, moment)
+  const writeValidation = (habit: Habit, day: string, moment: Moment, value: number) => {
+    const existing = findValidation(habit, day, moment)
     if (value <= 0) {
       if (existing) remove('validations', existing.id)
       return
@@ -154,13 +182,12 @@ function useStoreValue() {
       moment,
       value,
       steps: [],
-      xp_earned: habit.tracking === 'levels' ? levelsValidationXp(value, bonusDays) : validationXp(value, habit.goal, bonusDays),
+      xp_earned: habit.tracking === 'levels' ? levelsValidationXp(value, bonusDays, xp) : validationXp(value, habit.goal, bonusDays, xp),
     } satisfies Validation)
   }
 
-  const setRoutineSteps = (habit: Habit, day: string, moment: Moment, steps: string[]) => {
-    if (!data) return
-    const existing = getValidation(indexValidations(data.validations), habit.id, day, moment)
+  const writeRoutineSteps = (habit: Habit, day: string, moment: Moment, steps: string[]) => {
+    const existing = findValidation(habit, day, moment)
     if (steps.length === 0) {
       if (existing) remove('validations', existing.id)
       return
@@ -173,19 +200,8 @@ function useStoreValue() {
       moment,
       value: level,
       steps,
-      xp_earned: routineXp(steps.length, level, streakDaysBefore(habit, day)),
+      xp_earned: routineXp(steps.length, level, streakDaysBefore(habit, day), xp),
     } satisfies Validation)
-  }
-
-  /** Today's slips take the current time; slips noted on a past day always count. */
-  const addSlip = (habit: Habit, day: string) => {
-    const time = day === today ? clockTime(now) : habit.avoid?.after ? '23:59' : '00:00'
-    save('slips', { id: crypto.randomUUID(), habit_id: habit.id, day, time } satisfies Slip)
-  }
-
-  const removeSlip = (habit: Habit, day: string) => {
-    const last = data?.slips.filter((s) => s.habit_id === habit.id && s.day === day).sort((a, b) => a.time.localeCompare(b.time)).pop()
-    if (last) remove('slips', last.id)
   }
 
   const avoidValidation = (habit: Habit, day: string): Validation => ({
@@ -195,74 +211,124 @@ function useStoreValue() {
     moment: habit.moments[0] ?? 'day',
     value: 1,
     steps: [],
-    xp_earned: validationXp(1, 1, streakDaysBefore(habit, day)),
+    xp_earned: validationXp(1, 1, streakDaysBefore(habit, day), xp),
   })
 
-  /** "Tenu": credit an avoid habit before the day is over. */
-  const confirmAvoid = (habit: Habit, day: string) => {
-    if (!data || !isAvoidOk(habit, data.slips, day)) return
-    if (!getValidation(indexValidations(data.validations), habit.id, day, habit.moments[0] ?? 'day')) save('validations', avoidValidation(habit, day))
+  /** One check mark: validates a moment fully (lightest level, whole routine, "tenu"), or cancels it. */
+  const toggleMomentRaw = (habit: Habit, day: string, moment: Moment) => {
+    const existing = findValidation(habit, day, moment)
+    const done = (existing?.value ?? 0) >= habit.goal
+    if (habit.tracking === 'routine') {
+      const levels = routineLevels(habit)
+      writeRoutineSteps(habit, day, moment, done ? [] : levels[levels.length - 1].steps)
+    } else if (habit.tracking === 'avoid') {
+      if (!done && isAvoidOk(habit, data!.slips, day)) save('validations', avoidValidation(habit, day))
+      else if (done && existing && !isAvoidSettled(habit, day, today, clockTime(now))) remove('validations', existing.id)
+    } else {
+      writeValidation(habit, day, moment, done ? 0 : habit.tracking === 'levels' ? 1 : habit.goal)
+    }
   }
 
-  /** A new occurrence of a recurring task, with fresh copies of its sub-tasks. The old one loses its recurrence. */
-  const spawnOccurrence = (task: Task, due: string, recurrence: Recurrence | null, children: Task[]) => {
-    const copy = newTask({ ...task, id: crypto.randomUUID(), due_date: due, recurrence, completed_at: null, xp_earned: 0 })
-    save('tasks', copy)
-    children.forEach((c) => save('tasks', newTask({ ...c, id: crypto.randomUUID(), parent_id: copy.id, completed_at: null, xp_earned: 0 })))
-    return copy
+  const label = (habit: Habit, undone: boolean) => `${habit.name} : ${undone ? 'annulé' : 'validé'}`
+
+  const toggleMoment = (habit: Habit, day: string, moment: Moment) => {
+    const done = (findValidation(habit, day, moment)?.value ?? 0) >= habit.goal
+    track(label(habit, done), () => toggleMomentRaw(habit, day, moment))
   }
 
-  const afterCompletion = (task: Task) => {
-    if (!data || task.parent_id || task.recurrence?.mode !== 'after') return
-    save('tasks', { ...task, recurrence: null })
-    const children = data.tasks.filter((t) => t.parent_id === task.id)
-    spawnOccurrence(task, nextDate(today, task.recurrence), task.recurrence, children)
+  /** The whole day at once (all moments), as in the agenda. */
+  const toggleDay = (habit: Habit, day: string) => {
+    if (!data) return
+    const done = isDayDone(habit, indexValidations(data.validations), day)
+    track(label(habit, done), () =>
+      habit.moments.forEach((m) => {
+        const momentDone = (findValidation(habit, day, m)?.value ?? 0) >= habit.goal
+        if (momentDone === done) toggleMomentRaw(habit, day, m)
+      }),
+    )
+  }
+
+  const setValidation = (habit: Habit, day: string, moment: Moment, value: number) =>
+    track(`${habit.name} : ${value > 0 ? 'enregistré' : 'annulé'}`, () => writeValidation(habit, day, moment, value))
+
+  const setRoutineSteps = (habit: Habit, day: string, moment: Moment, steps: string[]) =>
+    track(`${habit.name} : étapes mises à jour`, () => writeRoutineSteps(habit, day, moment, steps))
+
+  /** Today's slips take the current time; slips noted on a past day always count. */
+  const addSlip = (habit: Habit, day: string) => {
+    const time = day === today ? clockTime(now) : habit.avoid?.after ? '23:59' : '00:00'
+    track(`${habit.name} : écart noté`, () => save('slips', { id: crypto.randomUUID(), habit_id: habit.id, day, time } satisfies Slip))
+  }
+
+  const removeSlip = (habit: Habit, day: string) => {
+    const last = data?.slips.filter((s) => s.habit_id === habit.id && s.day === day).sort((a, b) => a.time.localeCompare(b.time)).pop()
+    if (last) track(`${habit.name} : écart retiré`, () => remove('slips', last.id))
+  }
+
+  /** Deletes a habit with its whole history. Not undoable: the page asks for confirmation. */
+  const removeHabit = (habit: Habit) => {
+    setData((d) => d && { ...d, validations: d.validations.filter((v) => v.habit_id !== habit.id), slips: d.slips.filter((s) => s.habit_id !== habit.id) })
+    enqueue(() => repo.removeWhere('validations', 'habit_id', habit.id))
+    enqueue(() => repo.removeWhere('slips', 'habit_id', habit.id))
+    remove('habits', habit.id)
+    setUndoEntry(null)
+  }
+
+  const completeTop = (task: Task) => planAfterCompletion(task, data!.tasks, today).forEach((t) => save('tasks', t))
+
+  /** Re-opening a task removes the next occurrence it created, if that one is untouched. */
+  const reopenTop = (task: Task) => {
+    const plan = planReopen(task, data!.tasks)
+    if (!plan) return
+    plan.remove.forEach((t) => remove('tasks', t.id))
+    save('tasks', { ...plan.restore, completed_at: null, xp_earned: 0 })
   }
 
   const toggleTask = (task: Task) => {
     if (!data) return
     const completing = task.completed_at === null
-    const xp = task.parent_id ? SUBTASK_XP : TASK_XP[task.priority]
-    const updated: Task = {
-      ...task,
-      completed_at: completing ? new Date().toISOString() : null,
-      xp_earned: completing ? xp : 0,
-    }
-    save('tasks', updated)
-    if (!task.parent_id) {
-      if (completing) afterCompletion(updated)
-      return
-    }
-    const parent = data.tasks.find((t) => t.id === task.parent_id)
-    if (!parent) return
-    const siblings = data.tasks.filter((t) => t.parent_id === parent.id).map((t) => (t.id === task.id ? updated : t))
-    const allDone = siblings.every((t) => t.completed_at !== null)
-    if (allDone !== (parent.completed_at !== null)) {
-      const done: Task = {
-        ...parent,
-        completed_at: allDone ? new Date().toISOString() : null,
-        xp_earned: allDone ? BLOCK_BONUS_XP : 0,
+    track(`${task.title} : ${completing ? 'terminée' : 'rouverte'}`, () => {
+      const updated: Task = {
+        ...task,
+        completed_at: completing ? new Date().toISOString() : null,
+        xp_earned: completing ? (task.parent_id ? xp.subtask : taskXp(task.priority, xp)) : 0,
       }
-      save('tasks', done)
-      if (allDone) afterCompletion(done)
-    }
-  }
-
-  const removeTask = (task: Task) => {
-    data?.tasks.filter((t) => t.parent_id === task.id).forEach((t) => remove('tasks', t.id))
-    remove('tasks', task.id)
-  }
-
-  const launchChecklist = (checklist: Checklist, due: string | null) => {
-    const block = newTask({
-      title: checklist.name,
-      list_id: checklist.list_id,
-      due_date: due ?? (checklist.recurrence ? today : null),
-      recurrence: checklist.recurrence,
+      save('tasks', updated)
+      if (!task.parent_id) {
+        if (completing) completeTop(updated)
+        else reopenTop(updated)
+        return
+      }
+      const parent = data.tasks.find((t) => t.id === task.parent_id)
+      if (!parent) return
+      const siblings = data.tasks.filter((t) => t.parent_id === parent.id).map((t) => (t.id === task.id ? updated : t))
+      const allDone = siblings.every((t) => t.completed_at !== null)
+      if (allDone === (parent.completed_at !== null)) return
+      const block: Task = { ...parent, completed_at: allDone ? new Date().toISOString() : null, xp_earned: allDone ? xp.block_bonus : 0 }
+      save('tasks', block)
+      if (allDone) completeTop(block)
+      else reopenTop(block)
     })
-    save('tasks', block)
-    checklist.items.forEach((item) => save('tasks', newTask({ title: item, parent_id: block.id, list_id: checklist.list_id })))
   }
+
+  const removeTask = (task: Task) =>
+    track(`${task.title} : supprimée`, () => {
+      data?.tasks.filter((t) => t.parent_id === task.id).forEach((t) => remove('tasks', t.id))
+      remove('tasks', task.id)
+    })
+
+  const launchChecklist = (checklist: Checklist, due: string | null) =>
+    track(`${checklist.name} : lancée`, () => {
+      const block = newTask({
+        title: checklist.name,
+        list_id: checklist.list_id,
+        due_date: due ?? (checklist.recurrence ? today : null),
+        recurrence: checklist.recurrence,
+        checklist_id: checklist.id,
+      })
+      save('tasks', block)
+      checklist.items.forEach((item) => save('tasks', newTask({ title: item, parent_id: block.id, list_id: checklist.list_id })))
+    })
 
   /** Detach rows that may still point at a deleted family or list (archived habits, tasks). */
   const removeFamily = (family: Family) => {
@@ -282,33 +348,17 @@ function useStoreValue() {
   /** Automatic bookkeeping: credit avoid habits whose day is over, and bring back fixed recurring tasks. */
   useEffect(() => {
     if (!data) return
-    const index = indexValidations(data.validations)
-    const time = clockTime(now)
-    for (const habit of data.habits) {
-      if (habit.tracking !== 'avoid' || habit.archived) continue
-      const moment = habit.moments[0] ?? 'day'
-      const from = habit.start_date > addDays(today, -AVOID_LOOKBACK_DAYS) ? habit.start_date : addDays(today, -AVOID_LOOKBACK_DAYS)
-      for (let day = from; day <= today; day = addDays(day, 1)) {
-        if (!isActiveOn(habit, day) || !isScheduledDay(habit, day)) continue
-        const existing = getValidation(index, habit.id, day, moment)
-        const ok = isAvoidOk(habit, data.slips, day)
-        const key = `${habit.id}|${day}`
-        if (!ok && existing) remove('validations', existing.id)
-        else if (ok && !existing && isAvoidSettled(habit, day, today, time) && !handled.current.has(key)) {
-          handled.current.add(key)
-          save('validations', avoidValidation(habit, day))
-        }
-        if (!ok) handled.current.delete(key)
-      }
+    const plan = planAvoidCredits(data.habits, indexValidations(data.validations), data.slips, today, clockTime(now))
+    plan.drop.forEach((id) => remove('validations', id))
+    for (const { habit, day, key } of plan.credit) {
+      if (handled.current.has(key)) continue
+      handled.current.add(key)
+      save('validations', avoidValidation(habit, day))
     }
-    for (const task of data.tasks) {
-      const r = task.recurrence
-      if (!r || r.mode !== 'fixed' || task.parent_id || !task.due_date || task.due_date > today || handled.current.has(task.id)) continue
-      handled.current.add(task.id)
-      const children = data.tasks.filter((t) => t.parent_id === task.id)
-      const dates = fixedOccurrences(task.due_date, r, today)
-      save('tasks', { ...task, recurrence: null })
-      dates.forEach((due, i) => spawnOccurrence(task, due, i === dates.length - 1 ? r : null, children))
+    for (const { head, rows } of planFixedRecurrences(data.tasks, today)) {
+      if (handled.current.has(head.id)) continue
+      handled.current.add(head.id)
+      rows.forEach((t) => save('tasks', t))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, today, now])
@@ -317,13 +367,21 @@ function useStoreValue() {
     data,
     error,
     today,
+    now,
+    xp,
+    undoEntry,
+    undo,
+    dismissUndo: () => setUndoEntry(null),
+    track,
     save,
     remove,
     setValidation,
     setRoutineSteps,
+    toggleMoment,
+    toggleDay,
     addSlip,
     removeSlip,
-    confirmAvoid,
+    removeHabit,
     toggleTask,
     removeTask,
     launchChecklist,
@@ -360,7 +418,19 @@ export function useValidationIndex() {
   return useMemo(() => indexValidations(data.validations), [data.validations])
 }
 
+/** Streaks of every habit, computed once per change instead of once per row. */
+export function useStreaks(): Map<string, Streak> {
+  const { data, today } = useStore()
+  const index = useValidationIndex()
+  return useMemo(() => new Map(data.habits.map((h) => [h.id, computeStreak(h, index, today)])), [data.habits, index, today])
+}
+
 export function useTotalXp() {
   const { data } = useStore()
   return data.validations.reduce((s, v) => s + v.xp_earned, 0) + data.tasks.reduce((s, t) => s + t.xp_earned, 0)
+}
+
+export function useUndo() {
+  const store = useContext(StoreContext)!
+  return { entry: store.undoEntry, undo: store.undo, dismiss: store.dismissUndo }
 }

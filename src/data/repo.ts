@@ -17,6 +17,8 @@ export interface Repo {
   list<T extends Row>(table: Table): Promise<T[]>
   upsert(table: Table, row: Row): Promise<void>
   remove(table: Table, id: string): Promise<void>
+  /** Delete every row whose `column` equals `value`. */
+  removeWhere(table: Table, column: string, value: string): Promise<void>
 }
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
@@ -39,6 +41,10 @@ const supabaseRepo = (client: NonNullable<typeof supabase>): Repo => ({
     const { error } = await client.from(table).delete().eq('id', id)
     if (error) throw error
   },
+  async removeWhere(table, column, value) {
+    const { error } = await client.from(table).delete().eq(column, value)
+    if (error) throw error
+  },
 })
 
 const storageKey = (table: Table) => `suivapp:${table}`
@@ -54,6 +60,9 @@ const localRepo: Repo = {
   },
   async remove(table, id) {
     write(table, read(table).filter((r) => r.id !== id))
+  },
+  async removeWhere(table, column, value) {
+    write(table, read(table).filter((r) => (r as Record<string, unknown>)[column] !== value))
   },
 }
 

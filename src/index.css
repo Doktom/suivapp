@@ -14,6 +14,39 @@
   --font-display: 'Space Grotesk', Inter, sans-serif;
 }
 
+/* Dark theme: follows the device unless a theme is chosen in the settings. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-ground: #141915;
+    --color-surface: #1d241f;
+    --color-ink: #e4e9e2;
+    --color-muted: #a2ada1;
+    --color-line: #2e3830;
+    --color-track: #34403a;
+    --color-chip: #283029;
+    --color-accent: #4f8a66;
+    --color-warn: #e0a457;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-ground: #141915;
+  --color-surface: #1d241f;
+  --color-ink: #e4e9e2;
+  --color-muted: #a2ada1;
+  --color-line: #2e3830;
+  --color-track: #34403a;
+  --color-chip: #283029;
+  --color-accent: #4f8a66;
+  --color-warn: #e0a457;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 body {
   background: var(--color-ground);
   color: var(--color-ink);

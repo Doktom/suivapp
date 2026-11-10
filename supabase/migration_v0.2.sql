@@ -1,5 +1,6 @@
--- Migration Suivapp V0.1 → V0.2. À exécuter UNE fois dans l'éditeur SQL de Supabase,
+-- Migration Suivapp V0.1 → V0.2. À exécuter dans l'éditeur SQL de Supabase,
 -- sur une base créée avec le schema.sql de la V0.1. Les données existantes sont conservées.
+-- Le script peut être relancé sans risque (par exemple après une mise à jour de ce fichier).
 -- (Une nouvelle installation exécute directement schema.sql, qui contient déjà la V0.2.)
 
 -- Habitudes et modèles : niveaux, routines, habitudes à éviter.
@@ -31,8 +32,14 @@ create table if not exists slips (
   time text not null
 );
 
--- Tâches récurrentes.
-alter table tasks add column if not exists recurrence jsonb;
+-- Tâches récurrentes, lien vers l'occurrence précédente et vers la checklist d'origine.
+alter table tasks
+  add column if not exists recurrence jsonb,
+  add column if not exists previous_id uuid,
+  add column if not exists checklist_id uuid;
+
+-- Valeurs d'XP réglables.
+alter table profile add column if not exists xp jsonb;
 
 -- Checklists réutilisables.
 create table if not exists checklists (

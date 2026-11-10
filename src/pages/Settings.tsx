@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { ExportSetting, ThemeSetting, XpSetting } from '../components/SettingsExtras'
 import { Button, Field, inputClass } from '../components/ui'
 import { supabase } from '../data/repo'
 import { useStore } from '../data/store'
@@ -47,6 +48,7 @@ export function Settings() {
           {Array.from({ length: 13 }, (_, h) => <option key={h} value={h}>{h} h</option>)}
         </select>
       </Field>
+      <div className="pt-5"><ThemeSetting /></div>
 
       <h2 className="pt-8 pb-3 font-display text-lg font-semibold">Familles</h2>
       {notice && <p role="alert" className="pb-2 text-sm text-warn">{notice}</p>}
@@ -69,6 +71,9 @@ export function Settings() {
         <input className={`${inputClass} min-w-28 flex-1 !w-auto`} placeholder="Caractéristique" aria-label="Caractéristique de la nouvelle famille" value={stat} onChange={(e) => setStat(e.target.value)} />
         <Button type="submit">Ajouter</Button>
       </form>
+
+      <XpSetting />
+      <ExportSetting />
 
       {supabase && <Button className="mt-8" onClick={() => supabase!.auth.signOut()}>Se déconnecter</Button>}
     </div>

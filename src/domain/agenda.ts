@@ -9,6 +9,8 @@ export type ItemState = 'done' | 'todo' | 'missed' | 'grace' | 'late'
 export interface AgendaItem {
   key: string
   kind: ItemKind
+  /** Id of the habit, task or event. */
+  refId: string
   title: string
   /** 'HH:MM', or a moment name when there is no time. */
   when: string
@@ -50,6 +52,7 @@ export function agendaItems(
     for (const e of src.events.filter((e) => e.day === day)) {
       items.push({
         key: `e-${e.id}`,
+        refId: e.id,
         kind: 'event',
         title: e.title,
         when: e.start_time ? `${e.start_time}${e.end_time ? `–${e.end_time}` : ''}` : 'Journée',
@@ -70,6 +73,7 @@ export function agendaItems(
       const moment = h.moments[0] ?? 'day'
       items.push({
         key: `h-${h.id}`,
+        refId: h.id,
         kind: 'habit',
         title: h.name,
         when: h.time_of_day ?? h.moments.map((m) => MOMENT_LABELS[m]).join(', '),
@@ -85,6 +89,7 @@ export function agendaItems(
       if (t.parent_id || t.due_date !== day || (filters.listId && t.list_id !== filters.listId)) continue
       items.push({
         key: `t-${t.id}`,
+        refId: t.id,
         kind: 'task',
         title: t.title,
         when: 'Tâche',
