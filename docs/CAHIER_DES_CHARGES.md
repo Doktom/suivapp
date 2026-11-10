@@ -198,10 +198,49 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 - Calendrier « heatmap » par habitude (style contributions GitHub).
 - Évolution de l'XP, des niveaux et des caractéristiques.
 
-### 3.9 Rappels et notifications **[V0.3]**
+### 3.9 Rappels et notifications **[V0.4]**
 
 - Rappel à l'horaire d'une habitude ou à l'échéance d'une tâche.
 - Nécessite l'app installée sur le téléphone (PWA).
+
+### 3.10 Entraînement **[V0.3]**
+
+Un onglet **Entraînement**, à part des habitudes, pour le sport, la mobilité et la danse. C'est la partie de l'app où l'on va le plus loin dans le détail, le suivi, la motivation et le côté ludique.
+
+**Principes**
+- Développé **dans la même app** (même compte, même base, même XP, même agenda), mais comme un **module autonome** du code (`src/training/`, tables préfixées `training_`), qu'on pourrait extraire plus tard si besoin.
+- Les habitudes sport et étirement **passent dans cette section** ; une séance terminée nourrit l'XP, les caractéristiques (Force, Souplesse, Grâce) et l'agenda.
+- Un **chrono** est disponible partout : durée de la séance, repos entre les séries, tenue d'un étirement, finisher.
+
+**Trois disciplines**
+
+1. **Sport** (salle ou maison)
+   - **Programme** : des séances-types qui tournent dans l'ordre (ex. Training 1 → 2 → 3 → 1…). L'app propose toujours « la prochaine séance », quel que soit le jour.
+   - **Structure d'une séance** : échauffement (articulaire, ou cardio 10 min rameur / escalier) → exercices → circuit éventuel (ex. abdos-gainage en 3 ou 4 tours) → **finisher** (WOD court au poids de corps).
+   - **Prescription par exercice** : groupes de séries (ex. `2x15` puis `3x10`), pyramide (`2x25 à vide / 2x20 / 2x15 / 3x10`), exercice enchaîné sur la dernière série (ex. + 10 fentes bulgares unilatérales), unilatéral, tempo, repos (1 à 2 min).
+   - **Saisie de chaque série** : répétitions et charge, pré-remplies avec la dernière fois, validées d'un tap ; le minuteur de repos démarre seul.
+   - **Finisher** : formats AMRAP, EMOM, « for time » ou tours, avec le chrono adapté ; une bibliothèque de WODs au poids de corps, avec tirage d'un « WOD du jour ».
+   - **Suivi** : progression par exercice (charge, répétitions, volume), records personnels, volume par semaine, régularité (calendrier des séances, série en semaines, séances par semaine face à l'objectif).
+2. **Mobilité** : routines de mobilité et d'étirement, exercices de kiné, séances de souplesse.
+   - Exercices avec consignes précises (que l'utilisateur rédige), durée de tenue, côté gauche / droit.
+   - Mode guidé au chrono (tenue, changement de côté, passage à l'exercice suivant) ou simple coche.
+   - Les routines en niveaux (Rapide / Normal / Complet) existantes migrent ici.
+   - Pas de suivi de la douleur.
+3. **Danse** : salsa, bachata, kizomba (détail à définir).
+
+**Motivation et côté ludique** : records battus célébrés en fin de séance, objectifs personnels avec jauge, badges propres à l'entraînement, bilan de la semaine, plus tard des programmes progressifs.
+
+### 3.11 Programme de salle de référence
+
+Programme fourni par l'utilisateur, 3 séances par semaine, à pré-charger. Repos 1 à 2 min max, tempo sur les séries de 10.
+
+| Séance | Échauffement | Exercices |
+|---|---|---|
+| Training 1 : Pecs / Épaules | Articulaire | Écarté butterfly 3x15 · Convergent pec assis 2x15/3x10 · Convergent incliné 2x15/3x10 · Développé militaire machine 2x15/3x10 · Élévation latérale haltère 4x15 · Reverse fly 4x15 · Tirage menton barre 3x15 |
+| Training 2 : Jambes | Rameur ou escalier 10 min | Adducteur / abducteur 3x15/15 · Presse à cuisse pyramidale 2x25 à vide / 2x20 / 2x15 / 3x10 + 10 fentes bulgares unilatérales sur la dernière série · Hip thrust 2x15/3x10 · Leg curl allongé 3x15 · Leg extension 3x15 · Circuit abdos-gainage 3 à 4 tours |
+| Training 3 : Bras / Dos | Articulaire | Extension corde poulie haute 4x15 · Extension barre pronation poulie haute 3x10 · Curl machine unilatéral 4x15/15 · Curl corde poulie basse 3x10 · Tirage vertical machine 2x15/3x10 · Tirage horizontal poulie prise serrée 2x15/3x10 · Lombaires machine 4x15 |
+
+Chaque séance se termine par un finisher au poids de corps.
 
 ## 4. Écrans
 
@@ -209,9 +248,10 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 2. **Habitudes** : liste par famille, création (catalogue ou de zéro), édition, détail avec historique et heatmap.
 3. **Tâches** : listes, blocs, tâches.
 4. **Agenda** : vues jour / semaine / mois + filtres.
-5. **Progression** : niveau, caractéristiques, succès (et plus tard avatar et récompenses).
-6. **Statistiques**.
-7. **Réglages** : familles, catalogue, valeurs d'XP, heure de bascule de la journée, export des données, thème clair / sombre.
+5. **Entraînement** : Sport, Mobilité, Danse ; prochaine séance, séance en cours avec chrono, historique et progression.
+6. **Progression** : niveau, caractéristiques, succès (et plus tard avatar et récompenses).
+7. **Statistiques**.
+8. **Réglages** : familles, catalogue, valeurs d'XP, heure de bascule de la journée, export des données, thème clair / sombre.
 
 Navigation : barre d'onglets en bas sur mobile, barre latérale sur PC.
 
@@ -276,7 +316,11 @@ Succès          (id, code, débloqué_le)
 - Checklists réutilisables, tâches récurrentes (calendrier fixe ou après réalisation).
 - Agenda (jour / semaine / mois) avec filtres, événements, bandeau « cette semaine ».
 
-**V0.3 — Confort**
+**V0.3 — Entraînement**
+- Onglet Entraînement : sport (programme de salle, séance en cours, séries, chrono, finisher), puis mobilité, puis danse.
+- Suivi de progression, records, régularité ; côté ludique propre à l'entraînement.
+
+**V0.4 — Confort**
 - Statistiques et heatmaps, succès.
 - PWA installable, rappels et notifications.
 
@@ -287,6 +331,12 @@ Succès          (id, code, débloqué_le)
 
 ## 8. Questions ouvertes
 
-Aucune question bloquante pour la V0.2. À rediscuter le moment venu :
+À trancher avant de coder l'Entraînement :
+- Sens de « /15 » dans `3x15/15` et `4x15/15` (par côté, ou deuxième mouvement enchaîné ?).
+- Finisher : bibliothèque de WODs tirés au hasard, ou WOD saisi à chaque séance ?
+- Danse : que suivre (cours, soirées, pratique, figures apprises) ?
+- Séances à la maison : programme à fournir.
+
+À rediscuter le moment venu :
 1. Récompenses réelles : forme et fonctionnement.
 2. Valeurs exactes d'XP et courbe de niveau, à ajuster à l'usage.
