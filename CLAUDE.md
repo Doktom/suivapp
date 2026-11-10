@@ -1,21 +1,87 @@
 # CLAUDE.md — contexte du projet
 
 ## Projet
-Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches et d'agenda, avec une gamification de style RPG (XP, niveaux, avatar évolutif). Ambiance visuelle sobre et zen.
+Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d'agenda et d'**entraînement** (sport, mobilité, danse), avec une gamification de style RPG (XP, niveaux, caractéristiques). Ambiance sobre et zen, mobile d'abord, thème clair / sombre.
 
-La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avant toute nouvelle tâche et la mettre à jour quand une décision est prise.
+- Spécification de référence : `docs/CAHIER_DES_CHARGES.md`. La lire avant toute nouvelle tâche et la mettre à jour quand une décision est prise.
+- Point d'étape et suite du travail : `docs/REPRISE.md` (à lire en début de session, à mettre à jour en fin d'étape). La commande `/reprise` fait la mise en route.
+- Dépôt GitHub public : `Doktom/suivapp`. Production : https://doktom.github.io/suivapp/
 
-## État actuel
-- Phase : **MVP V0.1 codé** (mobile et PC). Supabase branché en production, connexion validée. Conception V0.2 validée (2026-11-10) ; prochaine étape : coder la V0.2, en commençant par les niveaux, les habitudes à éviter et les routines.
-- Sans variables Supabase, l'app tourne en mode démo (localStorage). Règles métier testées dans `src/domain/`.
-- Workflow : `git pull` au début, push sur `main` à la fin (déploie la prod sur GitHub Pages). Fichier de reprise `.md` seulement si demandé en fin de session.
-- Dépôt GitHub : `Doktom/suivapp`.
-- Priorité : mécaniques et fonctionnalités avant le graphisme.
+## État actuel (2026-11-10)
+- **V0.1 et V0.2 codées**, **V0.3 Entraînement : étapes 1 à 4 codées** (sport, suivi du sport, mobilité, danse). **Prochaine étape : V0.3 étape 5, le côté ludique** (détail dans `docs/REPRISE.md`).
+- Version `package.json` : 0.3.0. 59 tests (Vitest) au vert, build OK.
+- Sans variables Supabase, l'app tourne en **mode démo** (localStorage).
 
-## Conventions
-- Langue : français pour la documentation, les échanges et les textes de l'interface ; anglais pour le code (noms de variables, fonctions).
-- Dépôt **public** : ne jamais committer de secret (`.env*` sauf `.env.example`).
-- Stack validée : React + TypeScript + Vite, Tailwind + shadcn/ui, Supabase (Postgres + Auth + RLS), hébergement GitHub Pages ou Vercel.
+## Façon de travailler avec l'utilisateur
+- Échanges, documentation et textes de l'interface **en français** ; code (noms, commentaires) **en anglais**.
+- Pour une demande ouverte (« améliore », « propose ») : **proposer d'abord** une liste priorisée, attendre son choix, puis coder.
+- Rester **simple** : il a refusé le suivi trop détaillé (verres d'eau, nombre de pas). Le sur-mesure est réservé à l'Entraînement.
+- **Livraison** : il préfère recevoir un **zip** et l'envoyer lui-même sur GitHub (« Add file → Upload files »). Commiter en local, ne **pas pousser** sans demande explicite. Rappeler les migrations SQL à lancer **avant** l'envoi.
+- En fin d'étape : tests + build + essai dans le navigateur (mobile 375 px et PC, console sans erreur), puis mise à jour de `CLAUDE.md`, du cahier des charges et de `docs/REPRISE.md`.
+
+## Commandes
+```bash
+npm ci            # dépendances
+npm run dev       # http://localhost:5173/suivapp/ (le chemin /suivapp/ est obligatoire)
+npm test          # Vitest
+npm run build     # tsc -b puis vite build (fait aussi par la CI avant déploiement)
+```
+`.claude/launch.json` déclare le serveur de dev pour l'aperçu de Claude Code.
+
+## Carte du code
+```
+src/
+  App.tsx, main.tsx          routes par hash (#today, #habits, #training…), connexion Supabase, ErrorBoundary, thème
+  components/                Layout (navigation + bandeau « Annuler »), ui.tsx (Button, Dialog, FamilyCard, tint…),
+                             HabitDialog, HabitRow, TaskItem / TaskDialog, Checklists, EventDialog, SettingsExtras, ErrorBoundary
+  pages/                     Today, Habits, Tasks, Agenda, Progress, Settings
+  data/
+    repo.ts                  accès aux tables : Supabase ou localStorage (mode démo), même interface
+    store.tsx                état global (contexte React) : chargement et pré-remplissage, save / remove optimistes,
+                             annulation (track / undo), actions métier, automatismes (useEffect)
+    theme.ts                 thème choisi par appareil
+  domain/                    RÈGLES PURES, testées (domain.test.ts)
+    types.ts                 habitudes, tâches, profil, réglages d'XP
+    schedule.ts, streak.ts   planification, jours de grâce, séries ; habitudes à éviter ; routines
+    xp.ts                    calculs d'XP (valeurs réglables via profile.xp)
+    automation.ts            crédit auto des habitudes à éviter, tâches récurrentes, ordre des sous-tâches
+    agenda.ts                éléments de l'agenda (habitudes, tâches, événements, entraînement, danse)
+    catalog.ts, describe.ts, recurrence.ts, date.ts
+  training/                  MODULE ENTRAÎNEMENT (autonome ; tables training_* et dance_*)
+    types.ts                 exercices, séances-types (items exercise / circuit / hold), WODs, journaux
+    program.ts               programme de salle pré-chargé (cahier 3.11) + 8 finishers
+    logic.ts, stats.ts       rotation, pré-remplissage, records, volume, XP ; historique, prescriptions « 2x15 / 3x10 »
+    mobility.ts              routines de départ, étapes guidées, XP, série de jours, import des routines d'habitudes
+    dance.ts                 cours fixes, temps par danse, objectifs, XP
+    TrainingPage.tsx         onglet Sport / Mobilité / Danse, reprise d'une séance en cours
+    SessionRunner, WodTimer  séance de sport guidée, chronos de finisher
+    MobilityRunner / View    routine guidée au chrono, accueil Mobilité, éditeur, import
+    DanceView / Progress / Ui  semaine, soirées, cours fixes ; figures ; objectifs
+    ProgressView, Charts     courbes et barres SVG ; ProgramEditor : séances et exercices ; LogDetail
+    chrono.ts                tick, bip, vibration, écran gardé allumé
+    *.test.ts                tests du module
+supabase/
+  schema.sql                 schéma COMPLET (installation neuve : ce seul fichier)
+  migration_v0.2.sql         V0.1 → V0.2 ; migration_v0.3.sql : V0.2 → V0.3 (entraînement, danse)
+docs/                        CAHIER_DES_CHARGES.md, REPRISE.md
+.claude/                     launch.json (serveur de dev), commands/reprise.md (/reprise)
+```
+
+## Règles techniques à respecter
+- **Logique métier = fonctions pures** dans `src/domain/` ou `src/training/*.ts`, avec un test pour chaque règle. Les composants ne font qu'appeler.
+- **Données** : passer par `save(table, row)` / `remove(table, id)` du store (mise à jour optimiste puis écriture en file). Une action annulable passe par `track(label, () => …)`.
+- **Nouvelle table ou colonne** : 1) type TS ; 2) `Table` dans `repo.ts`, `TABLES` et `Data` dans `store.tsx` ; 3) valeur par défaut dans `normalize()` pour les anciennes lignes ; 4) SQL **idempotent** (`if not exists`, `drop policy if exists`) dans la migration de la version ET dans `schema.sql`, avec la RLS `owner_only` et `grant … to authenticated`.
+- Les données pré-chargées (catalogue, programme, routines) se créent au chargement si absentes (`store.tsx`, fonction `load`).
+- Les séances en cours (sport, mobilité) restent dans le localStorage (`suivapp:training-draft`, `suivapp:mobility-draft`) jusqu'à l'enregistrement.
+- Dates : chaînes `YYYY-MM-DD` ; journée logique qui bascule à l'heure du profil (4 h) ; semaine du lundi (0) au dimanche (6).
+- UI : composants de `ui.tsx`, couleurs par variables CSS (`--color-*`, clair et sombre dans `index.css`), cibles tactiles ≥ 44 px, pas de débordement horizontal à 375 px.
+- Dépôt **public** : jamais de secret (`.env*` ignoré sauf `.env.example`). Seule la clé publique `anon` de Supabase est utilisée.
+
+## Pièges connus
+- L'app se sert sous `/suivapp/` (base Vite) : `http://localhost:5173/` seul affiche une page vide.
+- Si la base Supabase n'a pas les tables de la version, l'app affiche un message demandant la migration (`MIGRATION_MESSAGE` dans `store.tsx`).
+- L'envoi par l'interface web de GitHub ajoute et remplace des fichiers mais n'en supprime jamais : signaler tout fichier à supprimer à la main. Les dossiers cachés (`.claude`, `.github`) peuvent être ignorés par le glisser-déposer.
+- Les anciennes habitudes sport / étirement / « Cours de danse » font doublon avec l'Entraînement tant qu'elles ne sont pas archivées.
 
 ## Journal des décisions
 - 2026-11-09 : un seul utilisateur ; téléphone et PC ; pas de hors-ligne ; pas de synchro Google pour l'instant.
@@ -23,10 +89,10 @@ La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avan
 - 2026-11-09 : agenda multi-vues (jour / semaine / mois), affichant habitudes, tâches et événements, avec filtres.
 - 2026-11-09 : gamification RPG (XP, niveaux) + avatar évolutif ; ambiance sobre et zen pour le prototype.
 - 2026-11-09 : code hébergé sur GitHub en public, avec les fichiers Claude pour reprendre le travail sur un autre PC.
-- 2026-11-09 : stack validée (React + TS + Vite, Tailwind + shadcn/ui, Supabase, hébergement gratuit).
+- 2026-11-09 : stack validée (React + TS + Vite, Tailwind, Supabase, hébergement gratuit). shadcn/ui finalement pas utilisé : composants maison.
 - 2026-11-09 : 1 jour de grâce par semaine et par habitude ; journée qui bascule à 4 h.
 - 2026-11-09 : blocs de tâches = projets (MVP) + checklists réutilisables (V0.2) ; routines à étapes en V0.2 ; habitudes « à éviter » en V0.2.
-- 2026-11-09 : rappels et notifications en V0.3 ; récompenses réelles et avatar (arbre qui grandit) plus tard : mécaniques d'abord, graphisme ensuite.
+- 2026-11-09 : rappels et notifications plus tard ; récompenses réelles et avatar (arbre qui grandit) plus tard : mécaniques d'abord, graphisme ensuite.
 - 2026-11-09 : familles par défaut modifiables (dont Danse et Souplesse) + catalogue d'habitudes extensible par l'utilisateur.
 - 2026-11-09 : sous-tâche = 5 XP ; moments matin / journée / soir dès le MVP ; quota hebdomadaire : une séance manquée pardonnée (minimum 1 séance).
 - 2026-11-10 : conception V0.2 validée. Rester simple (pas de verres d'eau, litres ou nombre de pas) ; type « compteur » abandonné.
@@ -35,3 +101,11 @@ La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avan
 - 2026-11-10 : routines = étapes stockées sur l'habitude (pas via les blocs de tâches) ; chaque niveau choisit ses étapes.
 - 2026-11-10 : checklists réutilisables = chaque lancement crée un nouveau bloc ; tâches récurrentes en deux modes (calendrier fixe ou après réalisation).
 - 2026-11-10 : agenda validé tel que spécifié ; habitudes « X fois par semaine » dans un bandeau « cette semaine » ; table événements dédiée.
+- 2026-11-10 : agenda en composant maison (pas FullCalendar) ; XP routine = 2 XP par étape faite + XP du niveau atteint ; écarts notés sur un jour passé comptent toujours ; crédit automatique des habitudes à éviter sur 30 jours en arrière au maximum.
+- 2026-11-10 : fréquences « En semaine » (lun.→ven.) et « Le week-end » (sam. et dim.) = préréglages de « certains jours » ; familles affichées en cartes colorées (Habitudes et catalogue) ; agenda semaine en lignes par jour avec icônes d'état, mois avec barre de progression.
+- 2026-11-10 : bandeau « Annuler » 6 s après chaque action ; agenda cliquable pour valider (pas les habitudes à venir) ; suppression définitive d'habitude avec confirmation ; correction sur 13 jours ; thème choisi par appareil ; XP réglables dans `profile.xp` (validations futures seulement) ; logique automatique dans `src/domain/automation.ts`.
+- 2026-11-10 : sous-tâches à position fixe (`tasks.position`) ; une ligne modifiée garde sa place en mémoire.
+- 2026-11-10 : onglet unique **Entraînement** (sport, mobilité, danse : salsa, bachata, kizomba), dans la même app mais en module autonome `src/training/` ; programme de salle de 3 séances en rotation (cahier 3.11), échauffement + finisher WOD à chaque séance ; séries détaillées (répétitions et charge) ; chrono partout ; pas de suivi de douleur ; habitudes sport et étirement migrent vers l'Entraînement. Devient la V0.3 (statistiques et rappels en V0.4).
+- 2026-11-10 : « /15 » = par côté (unilatéral) ou 2e mouvement enchaîné (add / abd) ; finisher = bibliothèque de WODs au choix + tirage au hasard ; danse = cours fixes, soirées, pratique, temps, figures, objectifs avec moyens d'y arriver ; programme maison à faire plus tard. Étapes V0.3 : 1 sport, 2 suivi du sport, 3 mobilité, 4 danse, 5 ludique.
+- 2026-11-10 : XP entraînement : séance de sport 20 + 2 / série + 5 échauffement + 3 / tour de circuit + 10 finisher ; mobilité 10 + 1 / étape ; danse : cours 20, soirée 25, pratique 2 / 10 min (max 20), figure maîtrisée 15, objectif atteint 50. Caractéristiques : Force (sport), Souplesse (mobilité), Grâce (danse).
+- 2026-11-10 : point d'étape. `supabase/schema.sql` devient le schéma complet (installation neuve en un fichier) ; les migrations servent aux mises à jour. Filet d'erreur d'affichage (`ErrorBoundary`). Fichier de reprise `docs/REPRISE.md` et commande `/reprise`.
