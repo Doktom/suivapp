@@ -47,7 +47,7 @@ function EventBlock({ item, onEvent, large = false }: { item: AgendaItem; onEven
       style={{ background: tint(item.color, 16), borderLeft: `4px solid ${item.color}` }}
     >
       <span className="text-[12px] font-semibold text-muted tabular-nums">{item.when}</span>
-      <span className={`font-medium leading-tight ${large ? 'text-base' : 'text-sm'}`}>{item.kind === 'training' ? `✓ ${item.title}` : item.title}</span>
+      <span className={`font-medium leading-tight ${large ? 'text-base' : 'text-sm'}`}>{item.kind === 'training' && item.state === 'done' ? `✓ ${item.title}` : item.title}</span>
       {large && item.event?.note && <span className="text-[13px] text-muted">{item.event.note}</span>}
     </button>
   )

@@ -22,6 +22,7 @@ import {
 import { DEFAULT_XP, levelsValidationXp, routineXp, taskXp, validationXp } from '../domain/xp'
 import { buildMobility } from '../training/mobility'
 import { buildProgram } from '../training/program'
+import type { DanceClass, DanceFigure, DanceGoal, DanceSession } from '../training/dance'
 import type { Exercise, TrainingLog, TrainingSession, Wod } from '../training/types'
 import { repo, type Row, type Table } from './repo'
 
@@ -40,6 +41,10 @@ export interface Data {
   training_sessions: TrainingSession[]
   training_wods: Wod[]
   training_logs: TrainingLog[]
+  dance_classes: DanceClass[]
+  dance_sessions: DanceSession[]
+  dance_figures: DanceFigure[]
+  dance_goals: DanceGoal[]
 }
 
 const TABLES: Table[] = [
@@ -57,6 +62,10 @@ const TABLES: Table[] = [
   'training_sessions',
   'training_wods',
   'training_logs',
+  'dance_classes',
+  'dance_sessions',
+  'dance_figures',
+  'dance_goals',
 ]
 
 const MIGRATION_MESSAGE =
@@ -478,7 +487,10 @@ export function useTotalXp() {
   return (
     data.validations.reduce((s, v) => s + v.xp_earned, 0) +
     data.tasks.reduce((s, t) => s + t.xp_earned, 0) +
-    data.training_logs.reduce((s, l) => s + l.xp_earned, 0)
+    data.training_logs.reduce((s, l) => s + l.xp_earned, 0) +
+    data.dance_sessions.reduce((s, d) => s + d.xp_earned, 0) +
+    data.dance_figures.reduce((s, f) => s + f.xp_earned, 0) +
+    data.dance_goals.reduce((s, g) => s + g.xp_earned, 0)
   )
 }
 

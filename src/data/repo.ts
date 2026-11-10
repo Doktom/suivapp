@@ -15,6 +15,10 @@ export type Table =
   | 'training_sessions'
   | 'training_wods'
   | 'training_logs'
+  | 'dance_classes'
+  | 'dance_sessions'
+  | 'dance_figures'
+  | 'dance_goals'
 export type Row = { id: string }
 
 export interface Repo {

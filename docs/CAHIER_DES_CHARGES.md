@@ -236,6 +236,8 @@ Un onglet **Entraînement**, à part des habitudes, pour le sport, la mobilité 
    - Temps passé par danse et par type (cours, soirée, pratique).
    - Figures apprises / en cours / maîtrisées, par danse.
    - Objectifs personnels (ex. « maîtriser 5 nouvelles figures de bachata d'ici mars ») avec les moyens d'y arriver : actions concrètes rattachées à l'objectif (pratiquer telle figure, aller à 2 soirées par mois…), et jauge de progression.
+   - Jauge au choix : figures maîtrisées, soirées, heures de danse, ou actions cochées ; comptée depuis le début de l'objectif, dans une danse ou toutes.
+   - XP : cours 20, soirée 25, pratique 2 par tranche de 10 min (max 20), figure maîtrisée 15, objectif atteint 50 ; caractéristique Grâce.
 
 **Motivation et côté ludique** : records battus célébrés en fin de séance, objectifs personnels avec jauge, badges propres à l'entraînement, bilan de la semaine, plus tard des programmes progressifs.
 

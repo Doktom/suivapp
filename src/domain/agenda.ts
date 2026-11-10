@@ -1,5 +1,6 @@
 import { addDays, mondayOf } from './date'
 import { isActiveOn, isAvoidOk, isDayDone, isDueOn, isQuota, periodDoneCount, quotaCount, type ValidationIndex } from './schedule'
+import { classesOn, KIND_LABELS as DANCE_KIND_LABELS, STYLE_COLORS, STYLE_LABELS, type DanceClass, type DanceSession } from '../training/dance'
 import type { Streak } from './streak'
 import { MOMENT_LABELS, type CalendarEvent, type Family, type Habit, type Moment, type Slip, type Task } from './types'
 
@@ -36,6 +37,8 @@ export interface AgendaSource {
   families: Family[]
   slips: Slip[]
   training_logs: { id: string; name: string; day: string; started_at: string; duration_s: number; discipline: string }[]
+  dance_classes: DanceClass[]
+  dance_sessions: DanceSession[]
 }
 
 const MOMENT_ORDER = { morning: '1', day: '2', evening: '3' } as const
@@ -77,6 +80,34 @@ export function agendaItems(
         order: `0${time}`,
         state: 'done',
         color: l.discipline === 'mobility' ? '#6A5A86' : '#B5613C',
+      })
+    }
+  }
+  if (filters.kinds.training && !filters.familyId && !filters.listId) {
+    const sessions = src.dance_sessions.filter((s) => s.day === day && s.status !== 'skipped')
+    for (const c of classesOn(src.dance_classes, day)) {
+      const attended = sessions.some((s) => s.class_id === c.id && s.status === 'done')
+      items.push({
+        key: `dc-${c.id}`,
+        refId: c.id,
+        kind: 'training',
+        title: `Cours de ${STYLE_LABELS[c.style].toLowerCase()}`,
+        when: `${c.start_time}–${c.end_time}`,
+        order: `0${c.start_time}`,
+        state: attended ? 'done' : day < today ? 'missed' : 'todo',
+        color: STYLE_COLORS[c.style],
+      })
+    }
+    for (const s of sessions.filter((s) => !s.class_id)) {
+      items.push({
+        key: `ds-${s.id}`,
+        refId: s.id,
+        kind: 'training',
+        title: s.title || `${DANCE_KIND_LABELS[s.kind]} · ${STYLE_LABELS[s.style]}`,
+        when: s.start_time ?? 'Journée',
+        order: s.start_time ? `0${s.start_time}` : '00',
+        state: s.status === 'done' ? 'done' : day < today ? 'missed' : 'todo',
+        color: STYLE_COLORS[s.style],
       })
     }
   }

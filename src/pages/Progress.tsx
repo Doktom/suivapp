@@ -9,9 +9,15 @@ export function Progress() {
   const total = levelFromXp(useTotalXp())
   const families = [...data.families].sort((a, b) => a.position - b.position)
   const habitFamily = new Map(data.habits.map((h) => [h.id, h.family_id]))
+  // Figures and goals have no family of their own: they count for Danse (Grâce).
+  const danceFamily = data.families.find((f) => f.name === 'Danse')?.id ?? data.families.find((f) => f.stat_name === 'Grâce')?.id
   const xpOf = (familyId: string) =>
     data.validations.filter((v) => habitFamily.get(v.habit_id) === familyId).reduce((s, v) => s + v.xp_earned, 0) +
-    data.training_logs.filter((l) => l.family_id === familyId).reduce((s, l) => s + l.xp_earned, 0)
+    data.training_logs.filter((l) => l.family_id === familyId).reduce((s, l) => s + l.xp_earned, 0) +
+    data.dance_sessions.filter((d) => d.family_id === familyId).reduce((s, d) => s + d.xp_earned, 0) +
+    (familyId === danceFamily
+      ? data.dance_figures.reduce((s, f) => s + f.xp_earned, 0) + data.dance_goals.reduce((s, g) => s + g.xp_earned, 0)
+      : 0)
 
   return (
     <>

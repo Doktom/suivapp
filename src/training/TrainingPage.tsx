@@ -8,6 +8,7 @@ import { draftSets, formatDuration, nextSession, rotation, volume } from './logi
 import { ProgramEditor } from './ProgramEditor'
 import { ProgressView } from './ProgressView'
 import { MobilityRunner, readMobilityDraft, startMobility, writeMobilityDraft, type MobilityDraft } from './MobilityRunner'
+import { Dance } from './DanceView'
 import { Mobility } from './MobilityView'
 import { readDraft, SessionRunner, writeDraft, type Draft } from './SessionRunner'
 import { FEELING_LABELS, WOD_FORMAT_LABELS, type Discipline, type TrainingLog, type TrainingSession, type Wod, type WodFormat } from './types'
@@ -329,11 +330,7 @@ export function Training() {
           }}
         />
       )}
-      {discipline === 'dance' && (
-        <p className="rounded-xl border border-line bg-surface p-4 text-muted">
-          Bientôt : salsa, bachata et kizomba : cours, soirées, pratique, figures et objectifs (étape 4).
-        </p>
-      )}
+      {discipline === 'dance' && <Dance />}
     </>
   )
 }
