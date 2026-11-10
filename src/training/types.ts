@@ -52,7 +52,30 @@ export interface CircuitItem {
   content: string
 }
 
-export type SessionItem = ExerciseItem | CircuitItem
+/** A mobility or stretching exercise: held for a time (or done for reps), on one or both sides, for some rounds. */
+export interface HoldItem {
+  id: string
+  kind: 'hold'
+  exercise_id: string
+  /** Seconds to hold; 0 when the exercise is counted in reps instead. */
+  hold_s: number
+  reps: number
+  /** Left then right. */
+  sides: boolean
+  rounds: number
+}
+
+export type SessionItem = ExerciseItem | CircuitItem | HoldItem
+
+/** Kinds of mobility routines. */
+export type MobilityCategory = 'mobility' | 'stretch' | 'physio' | 'flexibility'
+
+/** A lighter or fuller version of a routine; `items` empty means all of them. */
+export interface RoutineLevel {
+  name: string
+  detail: string
+  items: string[]
+}
 
 /** A session template, e.g. "Training 2 : Jambes". Gym sessions rotate in `position` order. */
 export interface TrainingSession {
@@ -65,6 +88,9 @@ export interface TrainingSession {
   items: SessionItem[]
   finisher: boolean
   archived: boolean
+  /** Mobility routines only. */
+  category: MobilityCategory | ''
+  levels: RoutineLevel[]
 }
 
 export type WodFormat = 'amrap' | 'emom' | 'for_time' | 'tabata'
@@ -121,3 +147,9 @@ export interface TrainingLog {
 export const FEELING_LABELS: Record<Feeling, string> = { easy: 'Facile', good: 'Bien', hard: 'Dur' }
 export const WOD_FORMAT_LABELS: Record<WodFormat, string> = { amrap: 'AMRAP', emom: 'EMOM', for_time: 'For time', tabata: 'Tabata' }
 export const PLACE_LABELS: Record<Place, string> = { gym: 'Salle', home: 'Maison' }
+export const CATEGORY_LABELS: Record<MobilityCategory, string> = {
+  mobility: 'Mobilité',
+  stretch: 'Étirements',
+  physio: 'Exercices de kiné',
+  flexibility: 'Souplesse',
+}

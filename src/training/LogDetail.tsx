@@ -21,15 +21,23 @@ export function LogDetail({ log, onClose }: { log: TrainingLog; onClose: () => v
     else groups.push({ exerciseId: s.exercise_id, chained: s.chained, sets: [s] })
   }
   const rounds = Object.values(log.circuits).reduce((a, b) => a + b, 0)
+  const mobility = log.discipline === 'mobility'
+  // Mobility steps are logged in seconds held, or in reps.
+  const holdOf = (itemId: string) => {
+    for (const s of data.training_sessions) for (const i of s.items) if (i.id === itemId && i.kind === 'hold') return i
+    return null
+  }
+  const describeSet = (s: TrainingLog['sets'][number]) =>
+    mobility ? `${s.reps} ${holdOf(s.item_id)?.hold_s ? 's' : 'reps'}` : `${s.reps}${s.weight ? ` × ${fmt(s.weight)} kg` : ''}`
 
   return (
     <Dialog title={log.name} onClose={onClose}>
       <div className="flex max-h-[70dvh] flex-col gap-3 overflow-y-auto">
         <p className="text-sm text-muted">
-          {formatLongDay(log.day)} · {formatDuration(log.duration_s)} · {Math.round(volume(log.sets)).toLocaleString('fr-FR')} kg
+          {formatLongDay(log.day)} · {formatDuration(log.duration_s)}{mobility ? '' : ` · ${Math.round(volume(log.sets)).toLocaleString('fr-FR')} kg`}
           {log.feeling ? ` · ${FEELING_LABELS[log.feeling]}` : ''} · <span className="font-medium text-accent">+{log.xp_earned} XP</span>
         </p>
-        <p className="text-sm">Échauffement : {log.warmup_done ? 'fait' : 'non coché'}{rounds > 0 ? ` · circuit : ${rounds} tour${rounds > 1 ? 's' : ''}` : ''}</p>
+        {!mobility && <p className="text-sm">Échauffement : {log.warmup_done ? 'fait' : 'non coché'}{rounds > 0 ? ` · circuit : ${rounds} tour${rounds > 1 ? 's' : ''}` : ''}</p>}
         {groups.map((g) => {
           const done = g.sets.filter((s) => s.done)
           return (
@@ -39,8 +47,8 @@ export function LogDetail({ log, onClose }: { log: TrainingLog; onClose: () => v
                 {log.records.includes(g.exerciseId) && <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">Record</span>}
               </p>
               <p className="text-[13px] text-muted tabular-nums">
-                {done.length === 0 ? 'Pas fait' : done.map((s) => `${s.reps}${s.weight ? ` × ${fmt(s.weight)} kg` : ''}`).join(' · ')}
-                {done.length > 0 && done.length < g.sets.length ? ` (${done.length}/${g.sets.length} séries)` : ''}
+                {done.length === 0 ? 'Pas fait' : done.map(describeSet).join(' · ')}
+                {done.length > 0 && done.length < g.sets.length ? ` (${done.length}/${g.sets.length} ${mobility ? 'fois' : 'séries'})` : ''}
               </p>
             </section>
           )

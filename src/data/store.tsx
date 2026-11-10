@@ -20,6 +20,7 @@ import {
   type XpSettings,
 } from '../domain/types'
 import { DEFAULT_XP, levelsValidationXp, routineXp, taskXp, validationXp } from '../domain/xp'
+import { buildMobility } from '../training/mobility'
 import { buildProgram } from '../training/program'
 import type { Exercise, TrainingLog, TrainingSession, Wod } from '../training/types'
 import { repo, type Row, type Table } from './repo'
@@ -76,6 +77,7 @@ function normalize(d: Data): Data {
     validations: d.validations.map((v) => ({ ...v, steps: v.steps ?? [] })),
     tasks: d.tasks.map((t) => ({ ...t, recurrence: t.recurrence ?? null, previous_id: t.previous_id ?? null, checklist_id: t.checklist_id ?? null, position: t.position ?? 0 })),
     profile: d.profile.map((p) => ({ ...p, xp: p.xp ?? null })),
+    training_sessions: d.training_sessions.map((s) => ({ ...s, category: s.category ?? '', levels: s.levels ?? [] })),
   }
 }
 
@@ -179,6 +181,14 @@ function useStoreValue() {
         for (const s of program.sessions) await repo.upsert('training_sessions', s)
         for (const w of program.wods) await repo.upsert('training_wods', w)
         Object.assign(loaded, { training_exercises: program.exercises, training_sessions: program.sessions, training_wods: program.wods })
+      }
+      // Starter mobility routines, once, when there is no mobility routine and no mobility session yet.
+      if (!loaded.training_sessions.some((s) => s.discipline === 'mobility') && !loaded.training_logs.some((l) => l.discipline === 'mobility')) {
+        const mobility = buildMobility()
+        for (const e of mobility.exercises) await repo.upsert('training_exercises', e)
+        for (const s of mobility.sessions) await repo.upsert('training_sessions', s)
+        loaded.training_exercises = [...loaded.training_exercises, ...mobility.exercises]
+        loaded.training_sessions = [...loaded.training_sessions, ...mobility.sessions]
       }
       // Rows from earlier versions: sub-task positions, and the built-in templates of the current catalogue.
       for (const t of numberSubtasks(loaded.tasks)) {

@@ -7,6 +7,8 @@ import { LogDetail } from './LogDetail'
 import { draftSets, formatDuration, nextSession, rotation, volume } from './logic'
 import { ProgramEditor } from './ProgramEditor'
 import { ProgressView } from './ProgressView'
+import { MobilityRunner, readMobilityDraft, startMobility, writeMobilityDraft, type MobilityDraft } from './MobilityRunner'
+import { Mobility } from './MobilityView'
 import { readDraft, SessionRunner, writeDraft, type Draft } from './SessionRunner'
 import { FEELING_LABELS, WOD_FORMAT_LABELS, type Discipline, type TrainingLog, type TrainingSession, type Wod, type WodFormat } from './types'
 
@@ -128,8 +130,13 @@ function Celebration({ log, onClose }: { log: TrainingLog; onClose: () => void }
   const names = log.records.map((id) => data.training_exercises.find((e) => e.id === id)?.name).filter(Boolean)
   return (
     <section role="status" className="flex flex-col gap-2 rounded-2xl border border-accent bg-surface p-5 text-center">
-      <p className="font-display text-2xl font-semibold">Séance terminée !</p>
-      <p className="text-sm text-muted">{log.name} · {formatDuration(log.duration_s)} · {Math.round(volume(log.sets)).toLocaleString('fr-FR')} kg</p>
+      <p className="font-display text-2xl font-semibold">{log.discipline === 'mobility' ? 'Routine terminée !' : 'Séance terminée !'}</p>
+      <p className="text-sm text-muted">
+        {log.name} · {formatDuration(log.duration_s)} ·{' '}
+        {log.discipline === 'mobility'
+          ? `${log.sets.filter((s) => s.done).length} étape${log.sets.filter((s) => s.done).length > 1 ? 's' : ''}`
+          : `${Math.round(volume(log.sets)).toLocaleString('fr-FR')} kg`}
+      </p>
       <p className="font-display text-3xl font-semibold text-accent">+{log.xp_earned} XP</p>
       {names.length > 0 && (
         <div className="rounded-xl bg-chip p-3">
@@ -167,7 +174,9 @@ function SessionCard({ session, logs, onStart, highlight }: { session: TrainingS
             <li key={item.id} className="py-0.5">
               {item.kind === 'circuit'
                 ? `${item.name} · ${item.rounds_min} à ${item.rounds_max} tours`
-                : `${data.training_exercises.find((e) => e.id === item.exercise_id)?.name} · ${item.sets.length} séries${item.then ? ` + ${data.training_exercises.find((e) => e.id === item.then!.exercise_id)?.name}` : ''}`}
+                : item.kind === 'exercise'
+                  ? `${data.training_exercises.find((e) => e.id === item.exercise_id)?.name} · ${item.sets.length} séries${item.then ? ` + ${data.training_exercises.find((e) => e.id === item.then!.exercise_id)?.name}` : ''}`
+                  : data.training_exercises.find((e) => e.id === item.exercise_id)?.name}
             </li>
           ))}
         </ul>
@@ -268,18 +277,27 @@ function SportSessions({ logs, onStart }: { logs: TrainingLog[]; onStart: (s: Tr
 
 export function Training() {
   const { data } = useStore()
-  const [discipline, setDiscipline] = useState<Discipline>('sport')
+  const [mobilityDraft, setMobilityDraftState] = useState<MobilityDraft | null>(readMobilityDraft)
+  const [discipline, setDiscipline] = useState<Discipline>(mobilityDraft ? 'mobility' : 'sport')
   const [draft, setDraftState] = useState<Draft | null>(readDraft)
   const [saved, setSaved] = useState<TrainingLog | null>(null)
   const setDraft = (d: Draft | null) => {
     writeDraft(d)
     setDraftState(d)
   }
+  const setMobilityDraft = (d: MobilityDraft | null) => {
+    writeMobilityDraft(d)
+    setMobilityDraftState(d)
+  }
   const running = draft ? data.training_sessions.find((s) => s.id === draft.session_id) : undefined
+  const runningRoutine = mobilityDraft ? data.training_sessions.find((s) => s.id === mobilityDraft.session_id) : undefined
   const pill = (active: boolean) => `min-h-[38px] rounded-md px-3 text-[13px] font-medium ${active ? 'bg-surface' : ''}`
 
   if (draft && running) {
     return <SessionRunner session={running} draft={draft} setDraft={setDraft} onClose={(log) => setSaved(log)} />
+  }
+  if (mobilityDraft && runningRoutine) {
+    return <MobilityRunner session={runningRoutine} draft={mobilityDraft} setDraft={setMobilityDraft} onClose={(log) => setSaved(log)} />
   }
 
   return (
@@ -303,9 +321,13 @@ export function Training() {
         />
       )}
       {discipline === 'mobility' && (
-        <p className="rounded-xl border border-line bg-surface p-4 text-muted">
-          Bientôt : routines de mobilité et d'étirement guidées au chrono, exercices de kiné et séances de souplesse (étape 3).
-        </p>
+        <Mobility
+          onStart={(routine, level) => {
+            unlockSound()
+            setSaved(null)
+            setMobilityDraft(startMobility(routine, level))
+          }}
+        />
       )}
       {discipline === 'dance' && (
         <p className="rounded-xl border border-line bg-surface p-4 text-muted">

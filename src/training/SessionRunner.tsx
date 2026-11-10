@@ -191,6 +191,7 @@ export function SessionRunner({ session, draft, setDraft, onClose }: {
             </section>
           )
         }
+        if (item.kind !== 'exercise') return null
         const exercise = exercises.find((e) => e.id === item.exercise_id)
         const rows = draft.sets.filter((s) => s.item_id === item.id)
         const last = lastSets(item.exercise_id, data.training_logs)

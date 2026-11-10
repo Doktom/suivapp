@@ -24,6 +24,11 @@ create table if not exists training_sessions (
   archived boolean not null default false
 );
 
+-- Routines de mobilité : catégorie et niveaux (Rapide / Normal / Complet).
+alter table training_sessions
+  add column if not exists category text not null default '',
+  add column if not exists levels jsonb not null default '[]';
+
 create table if not exists training_wods (
   id uuid primary key,
   user_id uuid not null default auth.uid() references auth.users on delete cascade,

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { clock, draftSets, findRecords, formatDuration, nextSession, randomWod, sessionXp, volume } from './logic'
+import type { Habit } from '../domain/types'
+import { buildMobility, importRoutineHabit, mobilityStreak, mobilitySteps, mobilityXp } from './mobility'
 import { buildProgram } from './program'
 import { exerciseHistory, formatPrescription, parsePrescription, personalRecords, weeklyVolume } from './stats'
 import { wodPhase } from './WodTimer'
@@ -122,5 +124,40 @@ describe('suivi de progression', () => {
     expect(sets?.map((s) => s.reps)).toEqual([25, 25, 20, 20, 10, 10, 10])
     expect(sets && formatPrescription(sets)).toBe('2x25 à vide / 2x20 / 3x10 tempo')
     expect(parsePrescription('trois séries')).toBe(null)
+  })
+})
+
+describe('mobilité', () => {
+  const mob = buildMobility()
+  const [morning, evening, split] = mob.sessions
+  it('déroule chaque tour et chaque côté', () => {
+    const steps = mobilitySteps(split, null)
+    // papillon, pancake, psoas G/D, grand écart G/D × 2 tours
+    expect(steps).toHaveLength(1 + 1 + 2 + 4)
+    expect(steps.slice(-4).map((s) => [s.side, s.round])).toEqual([['left', 0], ['right', 0], ['left', 1], ['right', 1]])
+  })
+  it('ne garde que les exercices du niveau choisi', () => {
+    expect(mobilitySteps(morning, 0)).toHaveLength(2)
+    expect(mobilitySteps(morning, 2).length).toBeGreaterThan(mobilitySteps(morning, 1).length)
+    expect(mobilitySteps(evening, null).length).toBeGreaterThan(mobilitySteps(evening, 0).length)
+  })
+  it('compte l’XP et la série de jours', () => {
+    expect(mobilityXp([true, true, false])).toBe(12)
+    expect(mobilityXp([false])).toBe(0)
+    const days = ['2026-11-08', '2026-11-09', '2026-11-10'].map((d) => ({ ...log('m', `${d}T07:00`), discipline: 'mobility' as const }))
+    expect(mobilityStreak(days, '2026-11-10')).toBe(3)
+    expect(mobilityStreak(days.slice(0, 2), '2026-11-10')).toBe(2)
+    expect(mobilityStreak(days.slice(0, 1), '2026-11-10')).toBe(0)
+  })
+  it('importe une routine d’habitude avec ses niveaux', () => {
+    const habit = {
+      name: 'Routine étirements du soir',
+      steps: [{ id: 'a', name: 'Ischios' }, { id: 'b', name: 'Dos' }],
+      levels: [{ name: 'Rapide', detail: '2 min', steps: ['a'] }],
+    } as unknown as Habit
+    const { exercises, session } = importRoutineHabit(habit, 3)
+    expect(exercises.map((e) => e.name)).toEqual(['Ischios', 'Dos'])
+    expect(session).toMatchObject({ discipline: 'mobility', name: 'Routine étirements du soir', position: 3 })
+    expect(session.levels[0].items).toEqual([session.items[0].id])
   })
 })

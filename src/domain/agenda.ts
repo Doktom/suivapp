@@ -35,7 +35,7 @@ export interface AgendaSource {
   events: CalendarEvent[]
   families: Family[]
   slips: Slip[]
-  training_logs: { id: string; name: string; day: string; started_at: string; duration_s: number }[]
+  training_logs: { id: string; name: string; day: string; started_at: string; duration_s: number; discipline: string }[]
 }
 
 const MOMENT_ORDER = { morning: '1', day: '2', evening: '3' } as const
@@ -76,7 +76,7 @@ export function agendaItems(
         when: time,
         order: `0${time}`,
         state: 'done',
-        color: '#B5613C',
+        color: l.discipline === 'mobility' ? '#6A5A86' : '#B5613C',
       })
     }
   }

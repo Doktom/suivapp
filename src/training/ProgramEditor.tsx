@@ -8,11 +8,16 @@ const MEASURE_LABELS: Record<Measure, string> = { reps_weight: 'Répétitions ×
 const REST_CHOICES = [45, 60, 90, 120, 150, 180]
 const small = 'size-11 flex-none text-muted disabled:opacity-30'
 
-function ExerciseDialog({ exercise, onClose, onCreated }: { exercise: Exercise | null; onClose: () => void; onCreated?: (e: Exercise) => void }) {
+export function ExerciseDialog({ exercise, onClose, onCreated, defaultMeasure = 'reps_weight' }: {
+  exercise: Exercise | null
+  onClose: () => void
+  onCreated?: (e: Exercise) => void
+  defaultMeasure?: Measure
+}) {
   const { save } = useStore()
   const [name, setName] = useState(exercise?.name ?? '')
   const [muscle, setMuscle] = useState(exercise?.muscle ?? '')
-  const [measure, setMeasure] = useState<Measure>(exercise?.measure ?? 'reps_weight')
+  const [measure, setMeasure] = useState<Measure>(exercise?.measure ?? defaultMeasure)
   const [unilateral, setUnilateral] = useState(exercise?.unilateral ?? false)
   const [notes, setNotes] = useState(exercise?.notes ?? '')
 
@@ -154,7 +159,7 @@ function SessionDialog({ session, onClose }: { session: TrainingSession; onClose
                 </div>
                 <input aria-label="Remarque" placeholder="Remarque (facultatif)" className={inputClass} value={item.note} onChange={(e) => setItem(item.id, { note: e.target.value })} />
               </>
-            ) : (
+            ) : item.kind === 'circuit' ? (
               <>
                 <input aria-label="Nom du circuit" className={inputClass} value={item.name} onChange={(e) => setItem(item.id, { name: e.target.value })} />
                 <div className="flex items-center gap-2 text-sm">
@@ -165,7 +170,7 @@ function SessionDialog({ session, onClose }: { session: TrainingSession; onClose
                 </div>
                 <input aria-label="Contenu du circuit" placeholder="Exercices du circuit" className={inputClass} value={item.content} onChange={(e) => setItem(item.id, { content: e.target.value })} />
               </>
-            )}
+            ) : null}
           </div>
         ))}
         <div className="flex flex-wrap gap-2">
@@ -208,6 +213,8 @@ export function ProgramEditor() {
       items: [],
       finisher: true,
       archived: false,
+      category: '',
+      levels: [],
     })
 
   return (

@@ -57,7 +57,7 @@ export function buildProgram() {
     content: 'Crunchs, gainage, gainage latéral, relevés de jambes',
   }
 
-  const common = { discipline: 'sport' as const, place: 'gym' as const, finisher: true, archived: false }
+  const common = { discipline: 'sport' as const, place: 'gym' as const, finisher: true, archived: false, category: '' as const, levels: [] }
   const sessions: TrainingSession[] = [
     {
       ...common,

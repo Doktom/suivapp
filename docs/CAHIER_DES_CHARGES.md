@@ -226,7 +226,10 @@ Un onglet **Entraînement**, à part des habitudes, pour le sport, la mobilité 
 2. **Mobilité** : routines de mobilité et d'étirement, exercices de kiné, séances de souplesse.
    - Exercices avec consignes précises (que l'utilisateur rédige), durée de tenue, côté gauche / droit.
    - Mode guidé au chrono (tenue, changement de côté, passage à l'exercice suivant) ou simple coche.
-   - Les routines en niveaux (Rapide / Normal / Complet) existantes migrent ici.
+   - Les routines en niveaux (Rapide / Normal / Complet) existantes migrent ici : bouton d'import (étapes en exercices de 30 s, niveaux gardés), l'habitude d'origine est archivée.
+   - Routines classées en Mobilité, Étirements, Exercices de kiné, Souplesse ; chaque exercice : tenue en secondes ou répétitions, 1 ou 2 côtés, nombre de tours.
+   - Mode guidé : 5 s de mise en position, tenue au chrono, bips sur les 3 dernières secondes, passage automatique ; pause, précédent, « Fait », « Passer » ; ou mode coche.
+   - Régularité en jours (série de jours, 14 derniers jours) ; XP 10 + 1 par étape, caractéristique Souplesse.
    - Pas de suivi de la douleur.
 3. **Danse** : salsa, bachata, kizomba. **[V0.3, étape 4]**
    - Cours à horaire fixe chaque semaine (récurrents, visibles dans l'agenda), soirées ajoutées à l'agenda, pratique perso.
