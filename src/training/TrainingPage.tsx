@@ -1,9 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Button, Dialog, Field, inputClass, ProgressBar, SectionTitle } from '../components/ui'
 import { useStore } from '../data/store'
 import { addDays, formatShortDay, mondayOf } from '../domain/date'
 import { unlockSound } from './chrono'
+import { BADGE_XP, computeBadges, recordFeed } from './achievements'
 import { LogDetail } from './LogDetail'
+import { SportGoals } from './SportGoals'
+import { RecordFeed, WeekStrip } from './Trophies'
 import { draftSets, formatDuration, nextSession, rotation, volume } from './logic'
 import { ProgramEditor } from './ProgramEditor'
 import { ProgressView } from './ProgressView'
@@ -13,7 +16,8 @@ import { Mobility } from './MobilityView'
 import { readDraft, SessionRunner, writeDraft, type Draft } from './SessionRunner'
 import { FEELING_LABELS, WOD_FORMAT_LABELS, type Discipline, type TrainingLog, type TrainingSession, type Wod, type WodFormat } from './types'
 
-const DISCIPLINES: [Discipline, string][] = [
+type Section = Discipline
+const SECTIONS: [Section, string][] = [
   ['sport', 'Sport'],
   ['mobility', 'Mobilité'],
   ['dance', 'Danse'],
@@ -128,7 +132,12 @@ function WodDialog({ wod, onClose }: { wod: Wod | null; onClose: () => void }) {
 
 function Celebration({ log, onClose }: { log: TrainingLog; onClose: () => void }) {
   const { data } = useStore()
-  const names = log.records.map((id) => data.training_exercises.find((e) => e.id === id)?.name).filter(Boolean)
+  const records = recordFeed(data.training_logs, data.training_exercises).filter((r) => r.logId === log.id)
+  // Badges this session unlocked: those not unlocked without it.
+  const won = useMemo(() => {
+    const before = new Set(computeBadges({ ...data, training_logs: data.training_logs.filter((l) => l.id !== log.id) }).filter((b) => b.unlocked_on).map((b) => b.id))
+    return computeBadges(data).filter((b) => b.unlocked_on && !before.has(b.id))
+  }, [data, log.id])
   return (
     <section role="status" className="flex flex-col gap-2 rounded-2xl border border-accent bg-surface p-5 text-center">
       <p className="font-display text-2xl font-semibold">{log.discipline === 'mobility' ? 'Routine terminée !' : 'Séance terminée !'}</p>
@@ -139,12 +148,24 @@ function Celebration({ log, onClose }: { log: TrainingLog; onClose: () => void }
           : `${Math.round(volume(log.sets)).toLocaleString('fr-FR')} kg`}
       </p>
       <p className="font-display text-3xl font-semibold text-accent">+{log.xp_earned} XP</p>
-      {names.length > 0 && (
+      {records.length > 0 && (
         <div className="rounded-xl bg-chip p-3">
-          <p className="font-semibold">{names.length === 1 ? 'Nouveau record' : `${names.length} nouveaux records`}</p>
-          <p className="text-sm">{names.join(' · ')}</p>
+          <p className="font-display text-lg font-semibold">{records.length === 1 ? 'Nouveau record !' : `${records.length} nouveaux records !`}</p>
+          {records.map((r) => (
+            <p key={r.exercise.id} className="text-sm">
+              {r.exercise.name} : <strong className="tabular-nums">{r.value.toLocaleString('fr-FR')} {r.unit}</strong>{' '}
+              <span className="text-accent tabular-nums">(+{(r.value - r.previous).toLocaleString('fr-FR')} {r.unit})</span>
+            </p>
+          ))}
         </div>
       )}
+      {won.map((b) => (
+        <div key={b.id} className="rounded-xl border border-accent p-3">
+          <p className="text-[12px] font-semibold tracking-wide text-accent uppercase">Badge débloqué · +{BADGE_XP} XP</p>
+          <p className="font-display text-lg font-semibold">{b.title}</p>
+          <p className="text-sm text-muted">{b.description}</p>
+        </div>
+      ))}
       <Button variant="primary" className="self-center" onClick={onClose}>Continuer</Button>
     </section>
   )
@@ -186,10 +207,11 @@ function SessionCard({ session, logs, onStart, highlight }: { session: TrainingS
   )
 }
 
-type SportView = 'sessions' | 'progress' | 'program'
+type SportView = 'sessions' | 'progress' | 'goals' | 'program'
 const SPORT_VIEWS: [SportView, string][] = [
   ['sessions', 'Séances'],
   ['progress', 'Progression'],
+  ['goals', 'Objectifs'],
   ['program', 'Programme'],
 ]
 const HISTORY_SHOWN = 15
@@ -208,6 +230,7 @@ function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
       </div>
       {view === 'sessions' && <SportSessions logs={logs} onStart={onStart} />}
       {view === 'progress' && <ProgressView logs={logs} />}
+      {view === 'goals' && <SportGoals />}
       {view === 'program' && <ProgramEditor />}
     </div>
   )
@@ -233,7 +256,10 @@ function SportSessions({ logs, onStart }: { logs: TrainingLog[]; onStart: (s: Tr
           {home.length > 0 && <p className="pt-2 text-[12px] font-semibold tracking-wide text-muted uppercase">À la maison</p>}
           {home.map((s) => <SessionCard key={s.id} session={s} logs={logs} onStart={() => onStart(s)} highlight={false} />)}
         </div>
-        <Regularity logs={logs} today={today} />
+        <div className="flex flex-col gap-3">
+          <Regularity logs={logs} today={today} />
+          <RecordFeed />
+        </div>
       </div>
 
       <section>
@@ -279,7 +305,7 @@ function SportSessions({ logs, onStart }: { logs: TrainingLog[]; onStart: (s: Tr
 export function Training() {
   const { data } = useStore()
   const [mobilityDraft, setMobilityDraftState] = useState<MobilityDraft | null>(readMobilityDraft)
-  const [discipline, setDiscipline] = useState<Discipline>(mobilityDraft ? 'mobility' : 'sport')
+  const [discipline, setDiscipline] = useState<Section>(mobilityDraft ? 'mobility' : 'sport')
   const [draft, setDraftState] = useState<Draft | null>(readDraft)
   const [saved, setSaved] = useState<TrainingLog | null>(null)
   const setDraft = (d: Draft | null) => {
@@ -306,12 +332,13 @@ export function Training() {
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <h1 className="font-display text-[28px] font-semibold">Entraînement</h1>
         <div className="flex rounded-lg bg-chip p-[3px]">
-          {DISCIPLINES.map(([d, label]) => (
+          {SECTIONS.map(([d, label]) => (
             <button key={d} type="button" aria-pressed={discipline === d} className={pill(discipline === d)} onClick={() => setDiscipline(d)}>{label}</button>
           ))}
         </div>
       </div>
       {saved && <div className="pb-5"><Celebration log={saved} onClose={() => setSaved(null)} /></div>}
+      {!saved && <div className="pb-4"><WeekStrip onOpen={() => (window.location.hash = '#progress')} /></div>}
       {discipline === 'sport' && (
         <Sport
           onStart={(s) => {

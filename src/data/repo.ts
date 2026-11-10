@@ -15,6 +15,7 @@ export type Table =
   | 'training_sessions'
   | 'training_wods'
   | 'training_logs'
+  | 'training_goals'
   | 'dance_classes'
   | 'dance_sessions'
   | 'dance_figures'
