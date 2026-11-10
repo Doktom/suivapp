@@ -6,7 +6,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches et
 La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avant toute nouvelle tâche et la mettre à jour quand une décision est prise.
 
 ## État actuel
-- Phase : **MVP V0.1 codé** (mobile et PC). Supabase branché en production, connexion validée. Prochaine étape : V0.2.
+- Phase : **MVP V0.1 codé** (mobile et PC). Supabase branché en production, connexion validée. Conception V0.2 validée (2026-11-10) ; prochaine étape : coder la V0.2, en commençant par les niveaux, les habitudes à éviter et les routines.
 - Sans variables Supabase, l'app tourne en mode démo (localStorage). Règles métier testées dans `src/domain/`.
 - Workflow : `git pull` au début, push sur `main` à la fin (déploie la prod sur GitHub Pages). Fichier de reprise `.md` seulement si demandé en fin de session.
 - Dépôt GitHub : `Doktom/suivapp`.
@@ -29,3 +29,9 @@ La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avan
 - 2026-11-09 : rappels et notifications en V0.3 ; récompenses réelles et avatar (arbre qui grandit) plus tard : mécaniques d'abord, graphisme ensuite.
 - 2026-11-09 : familles par défaut modifiables (dont Danse et Souplesse) + catalogue d'habitudes extensible par l'utilisateur.
 - 2026-11-09 : sous-tâche = 5 XP ; moments matin / journée / soir dès le MVP ; quota hebdomadaire : une séance manquée pardonnée (minimum 1 séance).
+- 2026-11-10 : conception V0.2 validée. Rester simple (pas de verres d'eau, litres ou nombre de pas) ; type « compteur » abandonné.
+- 2026-11-10 : niveaux par habitude ou routine (Rapide / Normal / Complet, 1 à 4 niveaux) ; XP 10 puis +5 par niveau ; le niveau le plus léger garde la série.
+- 2026-11-10 : habitudes à éviter avec heure limite (« ne pas fumer avant 12 h ») et tolérance (« pas trop de sucre ») ; réussite créditée à la bascule de 4 h.
+- 2026-11-10 : routines = étapes stockées sur l'habitude (pas via les blocs de tâches) ; chaque niveau choisit ses étapes.
+- 2026-11-10 : checklists réutilisables = chaque lancement crée un nouveau bloc ; tâches récurrentes en deux modes (calendrier fixe ou après réalisation).
+- 2026-11-10 : agenda validé tel que spécifié ; habitudes « X fois par semaine » dans un bandeau « cette semaine » ; table événements dédiée.

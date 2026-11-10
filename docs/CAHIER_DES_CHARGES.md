@@ -1,6 +1,6 @@
 # Cahier des charges — Suivapp (webapp personnelle d'habitudes)
 
-> Version 0.2 — 9 novembre 2026 — statut : **validé pour démarrer le MVP**
+> Version 0.3 — 10 novembre 2026 — statut : **MVP livré, conception V0.2 validée**
 > Les points marqués **[Plus tard]** sont actés mais repoussés après le MVP.
 
 ---
@@ -50,12 +50,21 @@ Supprimer une famille qui contient des habitudes demande de les déplacer ou de 
 - Ou **de zéro** : nom, famille, description facultative, icône.
 
 **Type de suivi**
+
+Principe : rester **simple**. On ne cherche pas à mesurer finement (litres d'eau, nombre de pas, verres) ; la nuance passe par les **niveaux**.
+
 - *Simple* (par défaut) : fait / pas fait.
-- *Quantité* : objectif chiffré + unité (ex. 2 L d'eau, 10 pages).
-- *Durée* : objectif en minutes (ex. 60 min de danse).
-- *Paliers* : plusieurs niveaux de réussite (ex. 10 / 20 / 30 min), chaque palier rapportant plus d'XP.
-- *Compteur* : plusieurs fois par jour (ex. 8 verres d'eau).
-- *À éviter* (« ne pas fumer », « pas d'écran après 22 h ») : jour réussi si rien n'est noté ; on note les écarts. **[V0.2]**
+- *Durée* / *Quantité* : objectif en minutes ou chiffré (existant depuis le MVP, à garder léger, sans le développer davantage).
+- *Niveaux* **[V0.2]** : plusieurs façons de réaliser l'habitude, du plus léger au plus complet, chacune rapportant plus d'XP. Exemple, étirements du matin : **Rapide** (2 min), **Normal** (5 min), **Complet** (10 min).
+  - Chaque niveau a un nom (Rapide / Normal / Complet par défaut, renommables), une durée ou une description facultative.
+  - 1 à 4 niveaux par habitude. Le principe s'applique à n'importe quelle habitude ou routine.
+  - À la validation, on choisit le niveau réalisé en un geste. Le niveau le plus léger suffit pour garder la série.
+- *À éviter* **[V0.2]** : jour réussi si aucun écart n'est noté ; on note les écarts quand ils arrivent. Variantes :
+  - interdiction simple (« ne pas fumer ») ;
+  - **avec heure limite** (« ne pas fumer avant 12 h », « pas d'écran après 22 h ») : seuls les écarts dans le créneau comptent ;
+  - **avec tolérance** (« pas trop de sucre ») : un nombre d'écarts tolérés par jour ou par semaine avant que la journée soit manquée.
+  - La réussite est constatée automatiquement à la bascule de la journée (4 h) et l'XP créditée à ce moment-là ; on peut aussi confirmer « tenu » le soir pour la voir tout de suite.
+- *Compteur* : abandonné (trop détaillé). Une habitude comme « boire de l'eau » se suit en simple ou en niveaux.
 
 **Fréquence**
 - Tous les jours (par défaut).
@@ -87,23 +96,25 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 | Famille | Habitude | Suivi suggéré | Fréquence suggérée |
 |---|---|---|---|
 | Danse | Cours de danse | Durée (60 min) | 2 à 3 fois / semaine |
-| Danse | Entraînement perso / révision de chorégraphie | Durée (paliers 15 / 30 / 45 min) | 2 fois / semaine |
+| Danse | Entraînement perso / révision de chorégraphie | Niveaux (15 / 30 / 45 min) | 2 fois / semaine |
 | Danse | Travail technique (pointes, tours, isolations…) | Durée (15 min) | 3 fois / semaine |
-| Souplesse | Routine étirements du matin | Routine (étapes) | Tous les jours, matin |
-| Souplesse | Routine étirements du soir | Routine (étapes) | Tous les jours, soir |
+| Souplesse | Routine étirements du matin | Routine en niveaux (Rapide 2 min / Normal 5 min / Complet 10 min) | Tous les jours, matin |
+| Souplesse | Routine étirements du soir | Routine en niveaux (Rapide / Normal / Complet) | Tous les jours, soir |
 | Souplesse | Séance grand écart / souplesse profonde | Durée (20 min) | 2 fois / semaine |
 | Sport | Renforcement musculaire | Durée (30 min) | 2 à 3 fois / semaine |
-| Sport | Gainage | Durée (paliers 2 / 4 / 6 min) | Tous les jours |
+| Sport | Gainage | Niveaux (2 / 4 / 6 min) | Tous les jours |
 | Sport | Cardio (course, vélo, corde) | Durée (30 min) | 2 fois / semaine |
-| Sport | Marche | Quantité (8 000 pas) | Tous les jours |
+| Sport | Marche | Niveaux (courte / normale / longue) | Tous les jours |
 | Skincare & soins | Routine skincare du matin | Routine (nettoyant, sérum, crème, SPF) | Tous les jours, matin |
 | Skincare & soins | Routine skincare du soir | Routine (démaquillage, nettoyant, soin, crème) | Tous les jours, soir |
 | Skincare & soins | Masque / exfoliation | Simple | 1 à 2 fois / semaine |
 | Skincare & soins | Soin des cheveux | Simple | 1 fois / semaine |
-| Santé | Boire de l'eau | Compteur (8 verres) | Tous les jours |
+| Santé | Boire de l'eau | Simple | Tous les jours |
 | Santé | Se coucher avant 23 h | Simple | Tous les jours |
-| Santé | Manger des légumes à chaque repas | Compteur (2 / 2) | Tous les jours |
+| Santé | Manger des légumes | Simple | Tous les jours |
 | Santé | Pas de grignotage | À éviter | Tous les jours |
+| Santé | Pas trop de sucre | À éviter (tolérance : 1 écart / jour) | Tous les jours |
+| Santé | Ne pas fumer avant 12 h | À éviter (heure limite) | Tous les jours |
 | Mental & bien-être | Méditation | Durée (10 min) | Tous les jours |
 | Mental & bien-être | Journal / gratitude | Simple | Tous les jours, soir |
 | Mental & bien-être | Pas d'écran après 22 h | À éviter | Tous les jours |
@@ -112,7 +123,7 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 | Maison | 15 min de rangement | Durée (15 min) | Tous les jours |
 | Maison | Grand ménage | Bloc de tâches (checklist réutilisable) | 1 fois / semaine |
 | Maison | Lessive | Simple | 2 fois / semaine |
-| Apprentissage & créativité | Lecture | Quantité (10 pages) | Tous les jours |
+| Apprentissage & créativité | Lecture | Niveaux (quelques pages / un chapitre / une longue session) | Tous les jours |
 | Apprentissage & créativité | Langue étrangère | Durée (15 min) | 5 fois / semaine |
 
 ### 3.4 Routines **[V0.2]**
@@ -120,15 +131,19 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 - Une routine est une **habitude composée d'étapes** à cocher dans l'ordre (ex. étirements du soir : ischios → fessiers → dos → épaules).
 - Elle est validée quand toutes les étapes sont faites ; validation partielle possible (XP au prorata).
 - Étapes ajoutables, supprimables, réordonnables ; durée facultative par étape.
-- Techniquement, elle réutilise le système des blocs de tâches.
+- **Routine en niveaux** : chaque niveau (Rapide / Normal / Complet) choisit les étapes qu'il contient. Ex. étirements du matin Rapide = 2 étapes, Complet = toutes.
+- Techniquement : les étapes sont stockées sur l'habitude, et la validation enregistre les étapes cochées. On ne passe pas par les blocs de tâches, ce qui garde la logique de séries et d'XP des habitudes.
 
 ### 3.5 Tâches
 
 - **Tâche simple** : titre, note, échéance facultative, priorité (basse / normale / haute).
 - **Listes** : regrouper des tâches par thème (Courses, Admin, Maison…).
 - **Blocs de tâches (projets)** : une tâche parente avec sous-tâches cochables et une barre de progression. **[MVP]**
-- **Checklists réutilisables** : un modèle de bloc (« préparer un voyage », « ménage du dimanche ») qu'on relance quand on veut, ou automatiquement selon une fréquence. **[V0.2]**
-- Tâches récurrentes (ex. « payer le loyer » chaque mois). **[V0.2]**
+- **Checklists réutilisables** : un modèle de bloc (« préparer un voyage », « ménage du dimanche ») qu'on relance quand on veut, ou automatiquement selon une fréquence. Chaque lancement crée un **nouveau bloc**, ce qui garde l'historique des fois précédentes. **[V0.2]**
+- **Tâches récurrentes** **[V0.2]**, deux modes au choix par tâche :
+  - *calendrier fixe* : la tâche revient à date fixe, même si la précédente n'est pas faite (ex. « payer le loyer » le 5 de chaque mois) ;
+  - *après réalisation* : l'occurrence suivante est créée quand on coche la tâche, à N jours / semaines / mois de la date de réalisation (ex. « changer les draps » 2 semaines après la dernière fois).
+  - Le même réglage de récurrence sert aux checklists réutilisables.
 - Les tâches avec échéance apparaissent dans l'agenda.
 - Vue « Aujourd'hui » : tâches dues aujourd'hui et en retard, sous les habitudes.
 
@@ -142,13 +157,17 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 - **Filtres** : par type (habitudes / tâches / événements), par famille, par liste de tâches.
 - État visuel : fait / à faire / manqué / jour de grâce.
 - Création rapide d'un événement ou d'une tâche en cliquant sur un créneau.
+- Les habitudes sans jour fixe (« X fois par semaine ») ne sont pas placées sur un jour : elles apparaissent dans un **bandeau « cette semaine »** avec leur avancement (ex. 1 / 3).
+- Événements : nouvelle table dédiée (section 5).
 
 ### 3.7 Gamification (mécaniques RPG)
 
 **XP et niveaux**
 - Chaque validation rapporte de l'XP :
   - habitude simple : 10 XP ;
-  - habitude nuancée : XP proportionnelle à l'objectif atteint, avec un bonus par palier ;
+  - habitude en niveaux : 10 XP au premier niveau, +5 XP par niveau au-dessus (ex. Rapide 10, Normal 15, Complet 20) ;
+  - habitude durée / quantité : XP proportionnelle à l'objectif atteint ;
+  - habitude à éviter : 10 XP par journée tenue, créditée à la bascule de la journée ;
   - routine : 10 XP + 2 XP par étape ;
   - tâche : 5 / 10 / 20 XP selon la priorité ; sous-tâche d'un bloc : 5 XP ; bloc terminé : bonus de 25 XP ;
   - bonus de série : +10 % à 7 jours, +25 % à 30 jours, +50 % à 100 jours.
@@ -198,21 +217,25 @@ Navigation : barre d'onglets en bas sur mobile, barre latérale sur PC.
 
 ```
 Famille         (id, nom, couleur, icône, caractéristique, ordre)
-ModèleHabitude  (id, famille_id, nom, type_suivi, objectif, unité, paliers[], fréquence, moment,
+ModèleHabitude  (id, famille_id, nom, type_suivi, objectif, unité, niveaux[], fréquence, moment,
                  étapes[], prédéfini [catalogue d'origine ou ajouté par l'utilisateur])
 Habitude        (id, famille_id, nom, description, icône,
-                 type_suivi[simple|quantité|durée|paliers|compteur|à_éviter|routine],
-                 objectif, unité, paliers[],
+                 type_suivi[simple|quantité|durée|niveaux|à_éviter|routine],
+                 objectif, unité,
+                 niveaux[{nom, durée?, description?, étapes[]?}],
+                 évitement{heure_limite?, tolérance?, période_tolérance[jour|semaine]},
                  fréquence{type[quotidien|jours_semaine|x_par_période|tous_les_n_jours], jours[], nb, période, intervalle},
                  moments[matin|journée|soir], horaire,
                  date_début, date_fin, en_pause, archivée)
 ÉtapeRoutine    (id, habitude_id, nom, ordre, durée)
-Validation      (id, habitude_id, date_jour, moment, valeur, palier_atteint, étapes_faites[],
+Écart           (id, habitude_id, date_jour, heure, note)
+Validation      (id, habitude_id, date_jour, moment, valeur, niveau_atteint, étapes_faites[],
                  jour_de_grâce, xp_gagnée)
 Liste           (id, nom, couleur)
 Tâche           (id, liste_id, parent_id [blocs], titre, note, échéance, priorité,
-                 récurrence, modèle_id, terminée_le, xp_gagnée)
-ModèleBloc      (id, nom, sous_tâches[], fréquence)
+                 récurrence{mode[fixe|après_réalisation], intervalle, unité[jour|semaine|mois]},
+                 modèle_id, terminée_le, xp_gagnée)
+ModèleBloc      (id, nom, sous_tâches[], récurrence)
 Événement       (id, titre, début, fin, note, couleur)
 Profil          (niveau, xp_totale, heure_bascule_journée, réglages_xp)
 Caractéristique (famille_id, niveau, xp)
@@ -247,9 +270,9 @@ Succès          (id, code, débloqué_le)
 - Tâches simples, listes, blocs de tâches (projets).
 
 **V0.2 — Profondeur**
-- Types paliers, compteur, à éviter ; routines à étapes ; fréquences avancées.
-- Checklists réutilisables, tâches récurrentes.
-- Agenda (jour / semaine / mois) avec filtres, événements.
+- Niveaux (Rapide / Normal / Complet) ; habitudes à éviter (heure limite, tolérance) ; routines à étapes, en niveaux ; fréquences avancées.
+- Checklists réutilisables, tâches récurrentes (calendrier fixe ou après réalisation).
+- Agenda (jour / semaine / mois) avec filtres, événements, bandeau « cette semaine ».
 
 **V0.3 — Confort**
 - Statistiques et heatmaps, succès.
@@ -262,6 +285,7 @@ Succès          (id, code, débloqué_le)
 
 ## 8. Questions ouvertes
 
-Aucune question bloquante pour démarrer le MVP. À rediscuter le moment venu :
+Aucune question bloquante pour la V0.2. À rediscuter le moment venu :
 1. Récompenses réelles : forme et fonctionnement.
 2. Valeurs exactes d'XP et courbe de niveau, à ajuster à l'usage.
+3. Agenda : FullCalendar ou composant maison, à trancher au début du lot agenda.
