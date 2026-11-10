@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState, type FormEvent } from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout, type Route } from './components/Layout'
 import { Button, Field, inputClass } from './components/ui'
 import { supabase } from './data/repo'
@@ -90,8 +91,10 @@ export default function App() {
   if (session === undefined) return <p className="p-8 text-center text-muted">Chargement…</p>
   if (supabase && !session) return <Login />
   return (
-    <StoreProvider key={session?.user.id ?? 'demo'}>
-      <Screens />
-    </StoreProvider>
+    <ErrorBoundary>
+      <StoreProvider key={session?.user.id ?? 'demo'}>
+        <Screens />
+      </StoreProvider>
+    </ErrorBoundary>
   )
 }

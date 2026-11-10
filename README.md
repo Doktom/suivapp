@@ -1,34 +1,51 @@
 # Suivapp
 
-Webapp personnelle de suivi d'habitudes, de tâches et d'agenda, avec une progression ludique de style RPG (XP, niveaux, avatar qui évolue).
+Webapp personnelle pour tenir ses **habitudes**, ses **tâches**, son **agenda** et son **entraînement** (sport, mobilité, danse), avec une progression ludique de style RPG : XP, niveaux et caractéristiques (Force, Souplesse, Grâce…).
 
-- Cahier des charges : [`docs/CAHIER_DES_CHARGES.md`](docs/CAHIER_DES_CHARGES.md)
-- Contexte pour Claude Code : [`CLAUDE.md`](CLAUDE.md)
+Production : <https://doktom.github.io/suivapp/> (déployée à chaque envoi sur `main`).
 
-Statut : V0.2 codée (niveaux, routines, habitudes à éviter, tâches récurrentes, checklists, agenda). Production : <https://doktom.github.io/suivapp/> (déployée à chaque push sur `main`).
+## Ce que fait l'app
+
+- **Aujourd'hui** : habitudes du jour par moment ou par famille, tâches dues, niveau et barre d'XP, correction des 13 derniers jours, bouton « Annuler » après chaque action.
+- **Habitudes** : simple, niveaux (Rapide / Normal / Complet), routine à étapes, à éviter (heure limite, tolérance), durée, quantité ; fréquences quotidienne, en semaine, week-end, certains jours, X fois par semaine ou par mois, tous les N jours ; séries avec jour de grâce ; catalogue par famille.
+- **Entraînement** :
+  - *Sport* : programme de salle en rotation, séance guidée série par série (pré-remplie avec la dernière fois), chrono de repos, finisher (AMRAP, EMOM, for time, Tabata), records, courbes de progression, volume par semaine, éditeur de programme.
+  - *Mobilité* : routines guidées au chrono (mise en position, tenue, côtés, bips) ou en coche, niveaux, série de jours.
+  - *Danse* (salsa, bachata, kizomba) : cours fixes, soirées, pratique, temps par danse, figures, objectifs avec les moyens d'y arriver.
+- **Tâches** : listes, blocs avec sous-tâches, tâches récurrentes (date fixe ou après réalisation), checklists réutilisables.
+- **Agenda** : jour / semaine / mois, filtres, événements, entraînement et cours de danse ; on valide d'un toucher.
+- **Progression** et **Réglages** : caractéristiques, thème clair / sombre, valeurs d'XP, export JSON.
+
+Le détail est dans le [cahier des charges](docs/CAHIER_DES_CHARGES.md) ; l'avancement et la suite dans [docs/REPRISE.md](docs/REPRISE.md).
 
 ## Développement
 
 ```bash
-npm install
-npm run dev
+npm ci
+npm run dev     # puis ouvrir http://localhost:5173/suivapp/
 npm test
+npm run build
 ```
 
-Sans fichier `.env.local`, l'app tourne en **mode démo** : les données restent dans le navigateur.
+Sans fichier `.env.local`, l'app tourne en **mode démo** : les données restent dans le navigateur. Avec Supabase, copier `.env.example` en `.env.local` et le remplir.
 
-## Brancher Supabase (une seule fois)
+Stack : React + TypeScript + Vite, Tailwind CSS v4, Supabase (Postgres + Auth + RLS), tests Vitest, hébergement GitHub Pages. Organisation du code : voir [`CLAUDE.md`](CLAUDE.md).
 
+## Base de données Supabase
+
+**Nouvelle installation** (une fois) :
 1. Créer un projet sur [supabase.com](https://supabase.com).
-2. Dans l'éditeur SQL, exécuter [`supabase/schema.sql`](supabase/schema.sql).
-3. Dans Authentication → URL Configuration, mettre `https://doktom.github.io/suivapp/` en Site URL.
+2. Dans l'éditeur SQL, exécuter [`supabase/schema.sql`](supabase/schema.sql) (schéma complet).
+3. Authentication → URL Configuration : mettre `https://doktom.github.io/suivapp/` en Site URL.
 4. Dans le dépôt GitHub (Settings → Secrets and variables → Actions), ajouter `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`, puis relancer le déploiement.
-5. Se connecter une première fois, puis désactiver les inscriptions dans Authentication → Sign In / Providers, pour que le compte reste unique.
+5. Se connecter une première fois, puis désactiver les inscriptions (Authentication → Sign In / Providers) pour que le compte reste unique.
 
-## Mettre la base à jour
+**Mise à jour d'une base existante**, avant d'envoyer la nouvelle version :
+- base V0.1 → exécuter [`migration_v0.2.sql`](supabase/migration_v0.2.sql) puis [`migration_v0.3.sql`](supabase/migration_v0.3.sql) ;
+- base V0.2 → exécuter `migration_v0.3.sql`.
 
-V0.3 (onglet Entraînement) : exécuter [`supabase/migration_v0.3.sql`](supabase/migration_v0.3.sql) après la migration V0.2.
+Les scripts se relancent sans risque et gardent les données. Le catalogue, le programme de salle et les routines de départ s'ajoutent tout seuls au premier chargement.
 
-## Passer une base V0.1 en V0.2
+## Reprendre le travail avec Claude Code
 
-Avant de déployer la V0.2, exécuter [`supabase/migration_v0.2.sql`](supabase/migration_v0.2.sql) dans l'éditeur SQL de Supabase (le script peut être relancé sans risque après une mise à jour). Les données existantes sont conservées ; les nouveaux modèles du catalogue s'ajoutent tout seuls au premier chargement.
+Les fichiers `CLAUDE.md`, `docs/REPRISE.md` et le dossier `.claude/` (serveur de dev et commande `/reprise`) permettent de reprendre sur n'importe quel PC : ouvrir le dossier du dépôt dans Claude Code et taper `/reprise`.

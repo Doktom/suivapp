@@ -1,7 +1,7 @@
 # Cahier des charges — Suivapp (webapp personnelle d'habitudes)
 
-> Version 0.3 — 10 novembre 2026 — statut : **MVP livré, conception V0.2 validée**
-> Les points marqués **[Plus tard]** sont actés mais repoussés après le MVP.
+> Version 0.4 — 10 novembre 2026 — statut : **V0.1 et V0.2 livrées, V0.3 (Entraînement) étapes 1 à 4 codées, étape 5 à faire**
+> Les points marqués **[Plus tard]** sont actés mais repoussés. Le détail de l'avancement est dans [`docs/REPRISE.md`](REPRISE.md).
 
 ---
 
@@ -268,43 +268,41 @@ Navigation : barre d'onglets en bas sur mobile, barre latérale sur PC.
 
 ## 5. Modèle de données
 
-```
-Famille         (id, nom, couleur, icône, caractéristique, ordre)
-ModèleHabitude  (id, famille_id, nom, type_suivi, objectif, unité, niveaux[], fréquence, moment,
-                 étapes[], prédéfini [catalogue d'origine ou ajouté par l'utilisateur])
-Habitude        (id, famille_id, nom, description, icône,
-                 type_suivi[simple|quantité|durée|niveaux|à_éviter|routine],
-                 objectif, unité,
-                 niveaux[{nom, durée?, description?, étapes[]?}],
-                 évitement{heure_limite?, tolérance?, période_tolérance[jour|semaine]},
-                 fréquence{type[quotidien|jours_semaine|x_par_période|tous_les_n_jours], jours[], nb, période, intervalle},
-                 moments[matin|journée|soir], horaire,
-                 date_début, date_fin, en_pause, archivée)
-ÉtapeRoutine    (id, habitude_id, nom, ordre, durée)
-Écart           (id, habitude_id, date_jour, heure, note)
-Validation      (id, habitude_id, date_jour, moment, valeur, niveau_atteint, étapes_faites[],
-                 jour_de_grâce, xp_gagnée)
-Liste           (id, nom, couleur)
-Tâche           (id, liste_id, parent_id [blocs], titre, note, échéance, priorité,
-                 récurrence{mode[fixe|après_réalisation], intervalle, unité[jour|semaine|mois]},
-                 modèle_id, terminée_le, xp_gagnée)
-ModèleBloc      (id, nom, sous_tâches[], récurrence)
-Événement       (id, titre, début, fin, note, couleur)
-Profil          (niveau, xp_totale, heure_bascule_journée, réglages_xp)
-Caractéristique (famille_id, niveau, xp)
-Succès          (id, code, débloqué_le)
-```
+Tables Supabase (une ligne = un enregistrement, toutes privées par RLS). Le schéma complet est dans `supabase/schema.sql`, les types dans `src/domain/types.ts`, `src/training/types.ts` et `src/training/dance.ts`.
+
+| Domaine | Table | Contenu |
+|---|---|---|
+| Habitudes | `families` | nom, couleur, caractéristique, ordre |
+| | `habit_templates` | catalogue : mêmes réglages qu'une habitude, `builtin` |
+| | `habits` | suivi (`simple`, `levels`, `routine`, `avoid`, `duration`, `quantity`), niveaux, étapes, règle « à éviter », fréquence, moments, horaire, dates, pauses, archivage |
+| | `validations` | habitude × jour × moment : valeur (niveau atteint pour niveaux et routines), étapes cochées, XP |
+| | `slips` | écarts des habitudes à éviter (jour, heure) |
+| Tâches | `task_lists`, `tasks` | tâches, blocs (`parent_id`, `position`), récurrence (`fixed` / `after`), `previous_id`, `checklist_id` |
+| | `checklists` | checklists réutilisables (éléments, récurrence) |
+| Agenda | `events` | événements ponctuels |
+| Profil | `profile` | heure de bascule, valeurs d'XP réglables |
+| Sport et mobilité | `training_exercises` | bibliothèque d'exercices (muscle, mesure, unilatéral, consignes) |
+| | `training_sessions` | séances-types (sport : séries, enchaînements, circuits ; mobilité : tenues, côtés, tours, niveaux, catégorie) |
+| | `training_wods` | finishers (AMRAP, EMOM, for time, Tabata) |
+| | `training_logs` | séances et routines faites : séries, finisher, ressenti, records, XP |
+| Danse | `dance_classes` | cours fixes hebdomadaires |
+| | `dance_sessions` | cours suivis, soirées (prévues / faites / annulées), pratique ; figures travaillées ; XP |
+| | `dance_figures` | figures par danse : à apprendre / en cours / maîtrisée |
+| | `dance_goals` | objectifs : mesure, cible, échéance, moyens à cocher |
+
+Pas de table pour les caractéristiques ni le niveau : ils se calculent à partir de l'XP enregistrée.
 
 ## 6. Choix techniques (validés)
 
 | Besoin | Choix | Pourquoi |
 |---|---|---|
 | Interface | **React + TypeScript + Vite** | Standard, rapide, très bien outillé. |
-| Style | **Tailwind CSS** + composants **shadcn/ui** | Rendu sobre et propre rapidement. |
+| Style | **Tailwind CSS v4** + composants maison (`src/components/ui.tsx`) | Rendu sobre, thème clair / sombre par variables CSS. |
 | Agenda | **Composant maison** | Léger, sur mesure (bandeau « cette semaine », états fait / manqué / grâce). |
 | Données + connexion | **Supabase** (Postgres + Auth, offre gratuite) | Données privées protégées par Row Level Security ; accessibles depuis le téléphone et le PC. |
-| Hébergement | **GitHub Pages** ou **Vercel** (gratuits) | Déploiement automatique à chaque push. |
-| Installation sur téléphone | **PWA** (icône sur l'écran d'accueil, sans mode hors-ligne) | Effet « vraie app » sans store ; nécessaire pour les notifications. |
+| Hébergement | **GitHub Pages** (gratuit) | Déploiement automatique à chaque push sur `main` (`.github/workflows/deploy.yml`, tests compris). |
+| Installation sur téléphone | **PWA** (icône sur l'écran d'accueil, sans mode hors-ligne) **[V0.4]** | Effet « vraie app » sans store ; nécessaire pour les notifications. |
+| Graphiques | **SVG maison** (`src/training/Charts.tsx`) | Deux formes simples (courbe, barres), sans dépendance. |
 
 **Sécurité, le dépôt étant public**
 - Aucune clé secrète dans le code : seule la clé publique `anon` de Supabase est exposée, ce qui est prévu pour ; la protection repose sur la RLS.
@@ -313,7 +311,7 @@ Succès          (id, code, débloqué_le)
 
 ## 7. Feuille de route
 
-**V0.1 — MVP (mécaniques de base)**
+**V0.1 — MVP (mécaniques de base)** ✅ livrée
 - Authentification.
 - Familles par défaut, modifiables.
 - Habitudes : types simple, durée, quantité ; fréquences quotidienne, jours de la semaine, X fois par semaine ; moments matin / journée / soir.
@@ -322,14 +320,18 @@ Succès          (id, code, débloqué_le)
 - XP, niveau global, caractéristiques (affichage simple).
 - Tâches simples, listes, blocs de tâches (projets).
 
-**V0.2 — Profondeur**
+**V0.2 — Profondeur** ✅ codée (+ annulation, agenda cliquable, export, thème sombre, XP réglables)
 - Niveaux (Rapide / Normal / Complet) ; habitudes à éviter (heure limite, tolérance) ; routines à étapes, en niveaux ; fréquences avancées.
 - Checklists réutilisables, tâches récurrentes (calendrier fixe ou après réalisation).
 - Agenda (jour / semaine / mois) avec filtres, événements, bandeau « cette semaine ».
 
-**V0.3 — Entraînement**
-- Onglet Entraînement : sport (programme de salle, séance en cours, séries, chrono, finisher), puis mobilité, puis danse.
-- Suivi de progression, records, régularité ; côté ludique propre à l'entraînement.
+**V0.3 — Entraînement** (en cours)
+- ✅ Étape 1 — Sport : programme de salle, séance en cours (séries, chrono de repos), finisher, historique, régularité.
+- ✅ Étape 2 — Sport, suivi : progression par exercice, volume par semaine, records, détail des séances, éditeur de programme.
+- ✅ Étape 3 — Mobilité : routines guidées au chrono ou en coche, niveaux, catégories, import des routines d'habitudes.
+- ✅ Étape 4 — Danse : cours fixes, soirées, pratique, temps par danse, figures, objectifs et moyens d'y arriver.
+- ⬜ Étape 5 — Côté ludique : badges propres à l'entraînement, bilan de la semaine, objectifs sport avec jauge (ex. « Squat 60 kg »), records mis en valeur.
+- ⬜ Plus tard : programme « maison » à construire ensemble.
 
 **V0.4 — Confort**
 - Statistiques et heatmaps, succès.
@@ -338,7 +340,7 @@ Succès          (id, code, débloqué_le)
 **Plus tard**
 - Avatar (arbre qui grandit) et travail graphique.
 - Récompenses réelles et boutique.
-- Synchronisation Google Calendar, export et import.
+- Synchronisation Google Calendar ; import de données (l'export JSON existe déjà).
 
 ## 8. Questions ouvertes
 
