@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useStore } from '../data/store'
+import { childrenOf } from '../domain/automation'
 import { formatShortDay } from '../domain/date'
 import { describeRecurrence } from '../domain/recurrence'
 import type { Task } from '../domain/types'
@@ -12,7 +13,7 @@ export function TaskItem({ task, today, editable = false }: { task: Task; today:
   const { data, save, toggleTask, removeTask } = useStore()
   const [editing, setEditing] = useState(false)
   const [newStep, setNewStep] = useState('')
-  const children = data.tasks.filter((t) => t.parent_id === task.id)
+  const children = childrenOf(data.tasks, task.id)
   const isBlock = children.length > 0
   const isDone = task.completed_at !== null
   const late = !isDone && task.due_date !== null && task.due_date < today
@@ -40,6 +41,7 @@ export function TaskItem({ task, today, editable = false }: { task: Task; today:
       recurrence: null,
       previous_id: null,
       checklist_id: null,
+      position: Math.max(-1, ...children.map((c) => c.position)) + 1,
       completed_at: null,
       xp_earned: 0,
     } satisfies Task)

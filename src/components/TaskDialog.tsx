@@ -31,6 +31,7 @@ export function TaskDialog({ task, defaultDue, onClose }: { task: Task | null; d
       recurrence: isSubtask ? null : recurrence,
       previous_id: task?.previous_id ?? null,
       checklist_id: task?.checklist_id ?? null,
+      position: task?.position ?? 0,
     } satisfies Task)
     onClose()
   }

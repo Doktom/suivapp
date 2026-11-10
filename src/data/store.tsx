@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { newTask, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from '../domain/automation'
+import { newTask, numberSubtasks, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from '../domain/automation'
 import { buildSeed, syncCatalog } from '../domain/catalog'
 import { clockTime, logicalDay } from '../domain/date'
 import { getValidation, indexValidations, isAvoidOk, isAvoidSettled, isDayDone, reachedLevel, routineLevels } from '../domain/schedule'
@@ -53,7 +53,7 @@ function normalize(d: Data): Data {
     habits: d.habits.map(normalizeShape),
     habit_templates: d.habit_templates.map(normalizeShape),
     validations: d.validations.map((v) => ({ ...v, steps: v.steps ?? [] })),
-    tasks: d.tasks.map((t) => ({ ...t, recurrence: t.recurrence ?? null, previous_id: t.previous_id ?? null, checklist_id: t.checklist_id ?? null })),
+    tasks: d.tasks.map((t) => ({ ...t, recurrence: t.recurrence ?? null, previous_id: t.previous_id ?? null, checklist_id: t.checklist_id ?? null, position: t.position ?? 0 })),
     profile: d.profile.map((p) => ({ ...p, xp: p.xp ?? null })),
   }
 }
@@ -95,7 +95,13 @@ function useStoreValue() {
 
   const save = <K extends Table>(table: K, row: Data[K][number]) => {
     record(table, row.id)
-    setData((d) => d && { ...d, [table]: [...(d[table] as Row[]).filter((r) => r.id !== row.id), row] })
+    setData((d) => {
+      if (!d) return d
+      const rows = d[table] as Row[]
+      // An updated row keeps its place, so that lists do not reorder when an item is checked.
+      const next = rows.some((r) => r.id === row.id) ? rows.map((r) => (r.id === row.id ? row : r)) : [...rows, row]
+      return { ...d, [table]: next }
+    })
     enqueue(() => repo.upsert(table, row))
   }
 
@@ -145,6 +151,10 @@ function useStoreValue() {
         await repo.upsert('profile', profile)
         Object.assign(loaded, seed, { profile: [profile] })
       } else {
+        for (const t of numberSubtasks(loaded.tasks)) {
+          await repo.upsert('tasks', t)
+          loaded.tasks = loaded.tasks.map((x) => (x.id === t.id ? t : x))
+        }
         // Accounts created before a catalogue update receive the new built-in templates.
         for (const t of syncCatalog(loaded.families, loaded.habit_templates)) {
           await repo.upsert('habit_templates', t)
@@ -327,7 +337,7 @@ function useStoreValue() {
         checklist_id: checklist.id,
       })
       save('tasks', block)
-      checklist.items.forEach((item) => save('tasks', newTask({ title: item, parent_id: block.id, list_id: checklist.list_id })))
+      checklist.items.forEach((item, position) => save('tasks', newTask({ title: item, parent_id: block.id, list_id: checklist.list_id, position })))
     })
 
   /** Detach rows that may still point at a deleted family or list (archived habits, tasks). */

@@ -36,7 +36,8 @@ create table if not exists slips (
 alter table tasks
   add column if not exists recurrence jsonb,
   add column if not exists previous_id uuid,
-  add column if not exists checklist_id uuid;
+  add column if not exists checklist_id uuid,
+  add column if not exists position int not null default 0;
 
 -- Valeurs d'XP réglables.
 alter table profile add column if not exists xp jsonb;

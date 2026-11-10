@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { newTask, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from './automation'
+import { childrenOf, newTask, numberSubtasks, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from './automation'
 import { addDays, addMonths, logicalDay, mondayOf, weekday } from './date'
 import { describeFrequency, weekdaysPreset } from './describe'
 import { fixedOccurrences, nextDate } from './recurrence'
@@ -247,5 +247,19 @@ describe('automatismes', () => {
     expect(plan?.remove.map((t) => t.id)).toEqual([next.id])
     expect(plan?.restore.recurrence).toEqual(next.recurrence)
     expect(planReopen(done, [done, { ...next, completed_at: 'y' }])).toBe(null)
+  })
+})
+
+describe('ordre des sous-tâches', () => {
+  it('garde l’ordre fixe des sous-tâches, quel que soit l’ordre de chargement', () => {
+    const a = newTask({ title: 'Aspirateur', parent_id: 'b', position: 0 })
+    const c = newTask({ title: 'Cuisine', parent_id: 'b', position: 2 })
+    const s = newTask({ title: 'Serpillière', parent_id: 'b', position: 1 })
+    expect(childrenOf([c, a, s], 'b').map((t) => t.title)).toEqual(['Aspirateur', 'Serpillière', 'Cuisine'])
+  })
+  it('numérote une seule fois les anciennes sous-tâches sans position', () => {
+    const kids = ['A', 'B', 'C'].map((title) => newTask({ title, parent_id: 'b' }))
+    expect(numberSubtasks(kids).map((t) => [t.title, t.position])).toEqual([['A', 0], ['B', 1], ['C', 2]])
+    expect(numberSubtasks(numberSubtasks(kids))).toEqual([])
   })
 })

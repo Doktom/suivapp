@@ -87,6 +87,7 @@ create table tasks (
   recurrence jsonb,
   previous_id uuid,
   checklist_id uuid,
+  position int not null default 0,
   completed_at timestamptz,
   xp_earned int not null default 0
 );

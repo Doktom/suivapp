@@ -123,6 +123,8 @@ export interface Task {
   previous_id: string | null
   /** The checklist this block was launched from. */
   checklist_id: string | null
+  /** Order of a sub-task within its block. */
+  position: number
   completed_at: string | null
   xp_earned: number
 }

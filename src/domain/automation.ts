@@ -45,6 +45,7 @@ export const newTask = (fields: Partial<Task> & Pick<Task, 'title'>): Task => ({
   recurrence: null,
   previous_id: null,
   checklist_id: null,
+  position: 0,
   completed_at: null,
   xp_earned: 0,
   ...fields,
@@ -57,7 +58,20 @@ export function buildOccurrence(task: Task, due: string, recurrence: Recurrence 
   return [copy, ...kids]
 }
 
-const childrenOf = (tasks: Task[], id: string) => tasks.filter((t) => t.parent_id === id)
+/** Sub-tasks of a block, in their fixed order. */
+export const childrenOf = (tasks: Task[], id: string) =>
+  tasks.filter((t) => t.parent_id === id).sort((a, b) => a.position - b.position)
+
+/** Sub-tasks saved before positions existed: number them in their current order (only blocks that need it). */
+export function numberSubtasks(tasks: Task[]): Task[] {
+  const updates: Task[] = []
+  for (const parentId of new Set(tasks.filter((t) => t.parent_id).map((t) => t.parent_id!))) {
+    const kids = tasks.filter((t) => t.parent_id === parentId)
+    if (new Set(kids.map((k) => k.position)).size === kids.length) continue
+    kids.forEach((k, position) => updates.push({ ...k, position }))
+  }
+  return updates
+}
 
 /** Fixed-schedule tasks that are due: rows to save (the old occurrence without its recurrence, then the new ones). */
 export function planFixedRecurrences(tasks: Task[], today: string): { head: Task; rows: Task[] }[] {
