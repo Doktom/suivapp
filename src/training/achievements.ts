@@ -97,9 +97,9 @@ export function recordFeed(logs: TrainingLog[], exercises: Exercise[]): RecordEn
 
 // ——— Badges ———
 
-export type BadgeGroup = 'sport' | 'mobility' | 'dance' | 'goals'
+export type BadgeGroup = 'habits' | 'sport' | 'mobility' | 'dance' | 'goals'
 
-export const BADGE_GROUP_LABELS: Record<BadgeGroup, string> = { sport: 'Sport', mobility: 'Mobilité', dance: 'Danse', goals: 'Objectifs' }
+export const BADGE_GROUP_LABELS: Record<BadgeGroup, string> = { habits: 'Habitudes et tâches', sport: 'Sport', mobility: 'Mobilité', dance: 'Danse', goals: 'Objectifs' }
 
 export interface Badge {
   id: string

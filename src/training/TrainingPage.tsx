@@ -6,7 +6,7 @@ import { unlockSound } from './chrono'
 import { BADGE_XP, computeBadges, recordFeed } from './achievements'
 import { LogDetail } from './LogDetail'
 import { SportGoals } from './SportGoals'
-import { RecordFeed, Trophies, WeekStrip } from './Trophies'
+import { RecordFeed, WeekStrip } from './Trophies'
 import { draftSets, formatDuration, nextSession, rotation, volume } from './logic'
 import { ProgramEditor } from './ProgramEditor'
 import { ProgressView } from './ProgressView'
@@ -16,12 +16,11 @@ import { Mobility } from './MobilityView'
 import { readDraft, SessionRunner, writeDraft, type Draft } from './SessionRunner'
 import { FEELING_LABELS, WOD_FORMAT_LABELS, type Discipline, type TrainingLog, type TrainingSession, type Wod, type WodFormat } from './types'
 
-type Section = Discipline | 'trophies'
+type Section = Discipline
 const SECTIONS: [Section, string][] = [
   ['sport', 'Sport'],
   ['mobility', 'Mobilité'],
   ['dance', 'Danse'],
-  ['trophies', 'Trophées'],
 ]
 
 /** Sessions per week aimed at, for the regularity view. */
@@ -339,7 +338,7 @@ export function Training() {
         </div>
       </div>
       {saved && <div className="pb-5"><Celebration log={saved} onClose={() => setSaved(null)} /></div>}
-      {!saved && discipline !== 'trophies' && <div className="pb-4"><WeekStrip onOpen={() => setDiscipline('trophies')} /></div>}
+      {!saved && <div className="pb-4"><WeekStrip onOpen={() => (window.location.hash = '#progress')} /></div>}
       {discipline === 'sport' && (
         <Sport
           onStart={(s) => {
@@ -359,7 +358,6 @@ export function Training() {
         />
       )}
       {discipline === 'dance' && <Dance />}
-      {discipline === 'trophies' && <Trophies />}
     </>
   )
 }

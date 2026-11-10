@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { newTask, numberSubtasks, planAfterCompletion, planAvoidCredits, planFixedRecurrences, planReopen } from '../domain/automation'
 import { buildSeed, syncCatalog } from '../domain/catalog'
+import { habitBadges } from '../domain/fun'
 import { clockTime, logicalDay } from '../domain/date'
 import { getValidation, indexValidations, isAvoidOk, isAvoidSettled, isDayDone, reachedLevel, routineLevels } from '../domain/schedule'
 import { computeStreak, streakDays, type Streak } from '../domain/streak'
@@ -485,13 +486,14 @@ export function useStreaks(): Map<string, Streak> {
   return useMemo(() => new Map(data.habits.map((h) => [h.id, computeStreak(h, index, today)])), [data.habits, index, today])
 }
 
-/** Training badges, recomputed when the training or dance data change. */
+/** All badges (habits, tasks and training), recomputed when the data they read change. */
 export function useBadges(): Badge[] {
-  const { data } = useStore()
+  const { data, today } = useStore()
+  const index = useValidationIndex()
   return useMemo(
-    () => computeBadges(data),
+    () => [...habitBadges(data, index, today).map((b) => ({ ...b, group: 'habits' as const })), ...computeBadges(data)],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data.training_logs, data.training_exercises, data.training_goals, data.dance_sessions, data.dance_figures, data.dance_goals],
+    [data.habits, index, data.tasks, today, data.training_logs, data.training_exercises, data.training_goals, data.dance_sessions, data.dance_figures, data.dance_goals],
   )
 }
 

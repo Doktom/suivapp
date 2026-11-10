@@ -181,7 +181,7 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
 - Affichage sobre au départ : barres de progression ou graphique radar, pour voir l'équilibre entre domaines.
 - Une famille ajoutée par l'utilisateur crée sa propre caractéristique.
 
-**Succès (badges)**
+**Succès (badges)** — voir l'onglet Trophées : 38 badges calculés depuis l'historique (+20 XP chacun), dont 15 pour les habitudes et les tâches.
 - Ex. « Première semaine parfaite », « 30 jours d'étirements », « 50 cours de danse », « 100 tâches terminées ». **[V0.3]**
 
 **Bienveillance** : manquer un jour ne fait jamais perdre d'XP, seule la série est affectée (et protégée par le jour de grâce).
@@ -260,7 +260,7 @@ Chaque séance se termine par un finisher au poids de corps.
 3. **Tâches** : listes, blocs, tâches.
 4. **Agenda** : vues jour / semaine / mois + filtres.
 5. **Entraînement** : Sport, Mobilité, Danse ; prochaine séance, séance en cours avec chrono, historique et progression.
-6. **Progression** : niveau, caractéristiques, succès (et plus tard avatar et récompenses).
+6. **Trophées** (ex-Progression) : niveau et caractéristiques, bilan de la semaine (habitudes + entraînement, comparé à la précédente), petites victoires, régularité (journées parfaites, semaines et mois complets, séries en cours et records), stats décalées, derniers records, badges (et plus tard avatar et récompenses).
 7. **Statistiques**.
 8. **Réglages** : familles, catalogue, valeurs d'XP, heure de bascule de la journée, export des données, thème clair / sombre.
 
@@ -331,7 +331,7 @@ Pas de table pour les caractéristiques, le niveau ni les badges : ils se calcul
 - ✅ Étape 2 — Sport, suivi : progression par exercice, volume par semaine, records, détail des séances, éditeur de programme.
 - ✅ Étape 3 — Mobilité : routines guidées au chrono ou en coche, niveaux, catégories, import des routines d'habitudes.
 - ✅ Étape 4 — Danse : cours fixes, soirées, pratique, temps par danse, figures, objectifs et moyens d'y arriver.
-- ✅ Étape 5 — Côté ludique : 23 badges (sport, mobilité, danse, objectifs ; +20 XP chacun), bilan de la semaine comparé à la précédente (bandeau en haut de l'Entraînement + vue Trophées), objectifs sport avec jauge et moyens d'y arriver (charge ou répétitions sur un exercice, séances, tonnage ; +50 XP), fil des derniers records et célébration en fin de séance (gain par rapport à l'ancien record, badges débloqués).
+- ✅ Étape 5 — Côté ludique, dans un **onglet Trophées** dédié qui couvre aussi les habitudes : 38 badges (habitudes et tâches, sport, mobilité, danse, objectifs ; +20 XP chacun), bilan de la semaine comparé à la précédente, petites victoires, régularité (journées parfaites, semaines et mois complets, séries), stats décalées, objectifs sport avec jauge et moyens d'y arriver (charge ou répétitions sur un exercice, séances, tonnage ; +50 XP), fil des derniers records et célébration en fin de séance (gain par rapport à l'ancien record, badges débloqués).
 - ⬜ Plus tard : programme « maison » à construire ensemble.
 
 **V0.4 — Confort**

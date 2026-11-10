@@ -1,14 +1,12 @@
-import { useState } from 'react'
-import { ProgressBar, SectionTitle } from '../components/ui'
+import { ProgressBar } from '../components/ui'
 import { useBadges, useStore } from '../data/store'
 import { addDays, formatShortDay, mondayOf } from '../domain/date'
-import { BADGE_GROUP_LABELS, BADGE_XP, change, recordFeed, weekSummary, type Badge, type BadgeGroup, type WeekSummary } from './achievements'
+import { BADGE_XP, change, recordFeed, weekSummary, type Badge } from './achievements'
 import { formatMinutes } from './dance'
 
 const fmt = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
-const GROUPS = Object.keys(BADGE_GROUP_LABELS) as BadgeGroup[]
 
-function useWeeks() {
+export function useWeeks() {
   const { data, today } = useStore()
   const badges = useBadges()
   const monday = mondayOf(today)
@@ -22,7 +20,7 @@ function useWeeks() {
 }
 
 /** A medal: filled when unlocked, outlined otherwise. */
-function Medal({ unlocked }: { unlocked: boolean }) {
+export function Medal({ unlocked }: { unlocked: boolean }) {
   return (
     <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" className="flex-none">
       <path d="M12 3h5l3 9h-5zM24 3h-5l-3 9h5z" fill={unlocked ? 'var(--color-accent)' : 'var(--color-track)'} opacity={unlocked ? 0.6 : 1} />
@@ -32,7 +30,7 @@ function Medal({ unlocked }: { unlocked: boolean }) {
   )
 }
 
-function Delta({ current, previous, unit = '' }: { current: number; previous: number; unit?: string }) {
+export function Delta({ current, previous, unit = '' }: { current: number; previous: number; unit?: string }) {
   const pct = change(current, previous)
   if (pct === null) return null
   const up = pct >= 0
@@ -63,42 +61,7 @@ export function WeekStrip({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-function Stat({ label, value, previous, display }: { label: string; value: number; previous: number; display: string }) {
-  return (
-    <div className="rounded-xl border border-line bg-surface p-3">
-      <p className="text-[13px] text-muted">{label}</p>
-      <p className="font-display text-2xl font-semibold tabular-nums">{display}</p>
-      <p className="flex items-center gap-2 text-[12px] text-muted">
-        <Delta current={value} previous={previous} />
-        <span>sem. d'avant : {label === 'Danse' ? formatMinutes(previous) : fmt(previous)}</span>
-      </p>
-    </div>
-  )
-}
-
-function Summary({ week, previous }: { week: WeekSummary; previous: WeekSummary }) {
-  const best = [
-    week.records > 0 ? `${week.records} record${week.records > 1 ? 's' : ''} battu${week.records > 1 ? 's' : ''}` : '',
-    week.sportSessions >= 3 ? 'semaine de sport complète' : '',
-    week.mobilityDays >= 5 ? `${week.mobilityDays} jours de mobilité` : '',
-    week.badges.length ? `${week.badges.length} badge${week.badges.length > 1 ? 's' : ''} gagné${week.badges.length > 1 ? 's' : ''}` : '',
-  ].filter(Boolean)
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-        <Stat label="Séances de sport" value={week.sportSessions} previous={previous.sportSessions} display={String(week.sportSessions)} />
-        <Stat label="Volume (kg)" value={week.volume} previous={previous.volume} display={fmt(week.volume)} />
-        <Stat label="Routines de mobilité" value={week.mobilityRoutines} previous={previous.mobilityRoutines} display={String(week.mobilityRoutines)} />
-        <Stat label="Danse" value={week.danceMinutes} previous={previous.danceMinutes} display={formatMinutes(week.danceMinutes)} />
-      </div>
-      <p className="rounded-xl bg-chip px-3 py-2 text-sm">
-        <strong>+{week.xp} XP</strong> cette semaine{best.length ? ` · ${best.join(' · ')}` : ''}.
-      </p>
-    </div>
-  )
-}
-
-function BadgeCard({ badge }: { badge: Badge }) {
+export function BadgeCard({ badge }: { badge: Badge }) {
   const unlocked = badge.unlocked_on !== null
   return (
     <div className={`flex items-center gap-3 rounded-xl border bg-surface p-3 ${unlocked ? 'border-accent' : 'border-line'}`}>
@@ -136,50 +99,5 @@ export function RecordFeed({ limit = 5 }: { limit?: number }) {
         </div>
       ))}
     </section>
-  )
-}
-
-/** Weekly summary, records and badges. */
-export function Trophies() {
-  const { current, previous, beforePrevious, badges } = useWeeks()
-  const [week, setWeek] = useState<'current' | 'previous'>('current')
-  const shown = week === 'current' ? current : previous
-  const compared = week === 'current' ? previous : beforePrevious
-  const unlocked = badges.filter((b) => b.unlocked_on).length
-  const pill = (active: boolean) => `min-h-[38px] rounded-md px-3 text-[13px] font-medium ${active ? 'bg-surface' : ''}`
-  return (
-    <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle>Bilan de la semaine</SectionTitle>
-          <div className="flex rounded-lg bg-chip p-[3px]">
-            <button type="button" aria-pressed={week === 'current'} className={pill(week === 'current')} onClick={() => setWeek('current')}>Cette semaine</button>
-            <button type="button" aria-pressed={week === 'previous'} className={pill(week === 'previous')} onClick={() => setWeek('previous')}>Semaine dernière</button>
-          </div>
-        </div>
-        <p className="text-[13px] text-muted">Semaine du {formatShortDay(shown.monday)} au {formatShortDay(addDays(shown.monday, 6))}</p>
-        <Summary week={shown} previous={compared} />
-      </section>
-
-      <RecordFeed limit={8} />
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <SectionTitle>Badges</SectionTitle>
-          <span className="text-sm text-muted tabular-nums">{unlocked} / {badges.length}</span>
-        </div>
-        {GROUPS.map((g) => (
-          <div key={g} className="flex flex-col gap-2">
-            <h3 className="text-[12px] font-semibold tracking-wide text-muted uppercase">{BADGE_GROUP_LABELS[g]}</h3>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {badges
-                .filter((b) => b.group === g)
-                .sort((a, b) => Number(!!b.unlocked_on) - Number(!!a.unlocked_on))
-                .map((b) => <BadgeCard key={b.id} badge={b} />)}
-            </div>
-          </div>
-        ))}
-      </section>
-    </div>
   )
 }

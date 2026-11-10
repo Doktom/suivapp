@@ -30,6 +30,10 @@ Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur 
 
 ## Étape 5 (côté ludique) : faite, sur la branche `etape-5-ludique`
 
+- **Onglet Trophées** (remplace Progression, dans la barre du bas sur téléphone) : niveau et caractéristiques (+ caractéristique chouchoute), bilan de la semaine habitudes + entraînement (taux de réussite, journées parfaites, sport, volume, mobilité, danse, tâches, XP) comparé à la semaine d'avant, **petites victoires** des 14 derniers jours, **régularité** (journées parfaites et série de journées parfaites, semaines complètes = un oubli max par habitude et quotas tenus, mois complets ≥ 90 %, séries en cours et records de série), **stats décalées** (profil du matin / du soir, jour fort, journée record, coches, temps investi et tonnage avec équivalences, jours de résistance, habitude la plus fidèle / la plus boudée), derniers records, badges.
+- Logique des habitudes dans `src/domain/fun.ts` (testée dans `fun.test.ts`) ; 15 badges habitudes et tâches en plus des 23 de l'entraînement.
+- L'Entraînement garde son bandeau de la semaine, qui mène à l'onglet Trophées.
+
 - **Bilan de la semaine** : bandeau en haut de l'Entraînement (séances, kg, records, routines, danse, XP, badges) ; vue **Trophées** avec la semaine en cours ou la précédente, comparées à la semaine d'avant.
 - **Badges** : 23, calculés depuis l'historique (`src/training/achievements.ts`), +20 XP chacun, date d'obtention retrouvée.
 - **Objectifs sport** (Sport → Objectifs) : charge ou répétitions sur un exercice (meilleure performance), séances ou tonnage depuis le début ; moyens d'y arriver à cocher ; +50 XP une fois atteint.

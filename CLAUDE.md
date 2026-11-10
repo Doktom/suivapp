@@ -9,7 +9,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d
 
 ## État actuel (2026-11-10)
 - **V0.1 et V0.2 codées**, **V0.3 Entraînement : étapes 1 à 4 codées** (sport, suivi du sport, mobilité, danse). **Étape 5 (côté ludique) codée sur la branche `etape-5-ludique`** : badges, bilan de la semaine, objectifs sport, records mis en valeur. Suite : voir `docs/REPRISE.md`.
-- Version `package.json` : 0.3.0. 65 tests (Vitest) au vert, build OK.
+- Version `package.json` : 0.3.0. 72 tests (Vitest) au vert, build OK.
 - **Phase de test** : le site GitHub Pages est construit **sans Supabase**, donc sans connexion ; les données restent dans le navigateur. Version finale prévue sur le serveur privé **atj-app.com** (o2switch, PHP + SQLite, sans login) : voir `docs/REPRISE.md`.
 
 ## Façon de travailler avec l'utilisateur
@@ -34,7 +34,7 @@ src/
   App.tsx, main.tsx          routes par hash (#today, #habits, #training…), connexion Supabase, ErrorBoundary, thème
   components/                Layout (navigation + bandeau « Annuler »), ui.tsx (Button, Dialog, FamilyCard, tint…),
                              HabitDialog, HabitRow, TaskItem / TaskDialog, Checklists, EventDialog, SettingsExtras, ErrorBoundary
-  pages/                     Today, Habits, Tasks, Agenda, Progress, Settings
+  pages/                     Today, Habits, Tasks, Agenda, Trophies (route #progress), Settings
   data/
     repo.ts                  accès aux tables : Supabase ou localStorage (mode démo), même interface
     store.tsx                état global (contexte React) : chargement et pré-remplissage, save / remove optimistes,
@@ -46,6 +46,7 @@ src/
     xp.ts                    calculs d'XP (valeurs réglables via profile.xp)
     automation.ts            crédit auto des habitudes à éviter, tâches récurrentes, ordre des sous-tâches
     agenda.ts                éléments de l'agenda (habitudes, tâches, événements, entraînement, danse)
+    fun.ts                   ludique des habitudes : journées / semaines / mois parfaits, séries, victoires, stats décalées, badges
     catalog.ts, describe.ts, recurrence.ts, date.ts
   training/                  MODULE ENTRAÎNEMENT (autonome ; tables training_* et dance_*)
     types.ts                 exercices, séances-types (items exercise / circuit / hold), WODs, journaux
@@ -54,7 +55,7 @@ src/
     mobility.ts              routines de départ, étapes guidées, XP, série de jours, import des routines d'habitudes
     dance.ts                 cours fixes, temps par danse, objectifs, XP
     achievements.ts          objectifs sport, fil des records, badges, bilan de la semaine
-    Trophies, SportGoals     vue Trophées (bilan, records, badges) + bandeau de la semaine ; objectifs sport
+    Trophies, SportGoals     briques Trophées (bandeau de la semaine, badges, fil des records) ; objectifs sport
     TrainingPage.tsx         onglet Sport / Mobilité / Danse, reprise d'une séance en cours
     SessionRunner, WodTimer  séance de sport guidée, chronos de finisher
     MobilityRunner / View    routine guidée au chrono, accueil Mobilité, éditeur, import
@@ -113,3 +114,4 @@ docs/                        CAHIER_DES_CHARGES.md, REPRISE.md
 - 2026-11-10 : point d'étape. `supabase/schema.sql` devient le schéma complet (installation neuve en un fichier) ; les migrations servent aux mises à jour. Filet d'erreur d'affichage (`ErrorBoundary`). Fichier de reprise `docs/REPRISE.md` et commande `/reprise`.
 - 2026-11-10 : plus de connexion par e-mail. Phase de test sur GitHub Pages sans Supabase (données dans le navigateur, export JSON pour sauvegarder) ; Claude pousse directement sur `main`. Version finale à la toute fin sur atj-app.com (o2switch : PHP + SQLite, dossier protégé par mot de passe via cPanel, pas d'écran de connexion, import de l'export JSON).
 - 2026-11-10 : étape 5 (branche `etape-5-ludique`, à la demande de l'utilisateur) : badges calculés depuis l'historique (aucune table, +20 XP chacun, comptés dans l'XP totale), objectifs sport en table `training_goals` (+50 XP, caractéristique Force), bilan de la semaine comparé à la précédente, fil des records ; segment « Trophées » dans l'Entraînement.
+- 2026-11-10 : onglet dédié **Trophées** (remplace Progression, route `#progress` gardée) pour toute la ludification, habitudes comprises : bilan commun, petites victoires, régularité (journée parfaite = toutes les habitudes à jours fixes du jour faites ; semaine complète = un oubli max par habitude + quotas tenus ; mois complet ≥ 90 %), stats décalées, badges habitudes et tâches. Barre du bas à 6 onglets sur téléphone (Réglages en haut).

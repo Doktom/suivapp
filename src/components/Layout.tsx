@@ -25,7 +25,12 @@ const ICONS: Record<Route, ReactNode> = {
       <path d="M3.5 10h17M8 3v4M16 3v4" />
     </>
   ),
-  progress: <path d="M4 20h16M7 20v-6M12 20V9M17 20V4" />,
+  progress: (
+    <>
+      <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+      <path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M9 20h6M10 17h4" />
+    </>
+  ),
   settings: (
     <>
       <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
@@ -41,7 +46,7 @@ const NAV: [Route, string][] = [
   ['training', 'Entraînement'],
   ['tasks', 'Tâches'],
   ['agenda', 'Agenda'],
-  ['progress', 'Progression'],
+  ['progress', 'Trophées'],
   ['settings', 'Réglages'],
 ]
 
@@ -66,11 +71,8 @@ function UndoBanner() {
   )
 }
 
-/** On phones, these two live at the top instead of in the bottom bar. */
-const MORE: [Route, string][] = [
-  ['progress', 'Progression'],
-  ['settings', 'Réglages'],
-]
+/** On phones, the settings live at the top instead of in the bottom bar. */
+const MORE: [Route, string][] = [['settings', 'Réglages']]
 
 const Icon = ({ route }: { route: Route }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -107,9 +109,9 @@ export function Layout({ route, error, children }: { route: Route; error: string
 
       <UndoBanner />
 
-      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-5 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
+      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
         {NAV.filter(([r]) => !MORE.some(([m]) => m === r)).map(([r, label]) => (
-          <a key={r} href={`#${r}`} aria-current={r === route ? 'page' : undefined} className={`flex min-h-13 flex-col items-center justify-center gap-0.5 text-[10px] ${color(r)}`}>
+          <a key={r} href={`#${r}`} aria-current={r === route ? 'page' : undefined} className={`flex min-h-13 min-w-0 flex-col items-center justify-center gap-0.5 text-[10px] tracking-tight whitespace-nowrap ${color(r)}`}>
             <Icon route={r} />
             {label}
           </a>

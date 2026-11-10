@@ -7,7 +7,7 @@ import { supabase } from './data/repo'
 import { StoreProvider, useStoreStatus } from './data/store'
 import { Agenda } from './pages/Agenda'
 import { Habits } from './pages/Habits'
-import { Progress } from './pages/Progress'
+import { Trophies } from './pages/Trophies'
 import { Settings } from './pages/Settings'
 import { Tasks } from './pages/Tasks'
 import { Training } from './training/TrainingPage'
@@ -19,7 +19,7 @@ const ROUTES: Record<Route, () => React.JSX.Element> = {
   training: Training,
   tasks: Tasks,
   agenda: Agenda,
-  progress: Progress,
+  progress: Trophies,
   settings: Settings,
 }
 
