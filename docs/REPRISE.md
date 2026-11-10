@@ -1,4 +1,4 @@
-# Point d'étape et reprise — 10 novembre 2026
+# Point d'étape et reprise — mis à jour le 10 novembre 2026 (V0.3 en ligne)
 
 À lire en début de session (avec `CLAUDE.md`). À mettre à jour à chaque fin d'étape.
 
@@ -8,7 +8,7 @@
 |---|---|---|
 | V0.1 — MVP | Habitudes simples / durée / quantité, catalogue, séries et jour de grâce, XP et niveaux, tâches, listes, blocs | ✅ codée |
 | V0.2 — Profondeur | Niveaux, routines, habitudes à éviter, fréquences (mois, tous les N jours, semaine, week-end), tâches récurrentes, checklists, agenda jour / semaine / mois + événements ; annulation, agenda cliquable, suppression d'habitude, export JSON, thème sombre, XP réglables | ✅ codée |
-| V0.3 — Entraînement | Étape 1 : sport en salle, séance guidée, chrono, finisher · Étape 2 : progression, records, volume, éditeur de programme · Étape 3 : mobilité guidée au chrono · Étape 4 : danse (cours, soirées, figures, objectifs) | ✅ étapes 1 à 5 codées (étape 5 sur la branche `etape-5-ludique`) |
+| V0.3 — Entraînement | Étape 1 : sport en salle, séance guidée, chrono, finisher · Étape 2 : progression, records, volume, éditeur de programme · Étape 3 : mobilité guidée au chrono · Étape 4 : danse (cours, soirées, figures, objectifs) | ✅ étapes 1 à 5 codées et en ligne |
 | V0.4 — Confort | Statistiques générales et heatmaps, succès, PWA installable, rappels | ⬜ |
 
 Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur une base vierge (habitude, tâche, séance de sport, routine de mobilité, danse, agenda, progression) sans erreur dans la console, affichage vérifié à 375 px et sur PC, thème clair et sombre.
@@ -28,7 +28,7 @@ Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur 
 - Ajuster les routines de mobilité de départ et les finishers (ce sont des suggestions).
 - Ne pas ajouter d'habitudes sport, étirement ou « Cours de danse » : c'est l'Entraînement qui s'en charge. Si une routine d'étirement existe en habitude, l'importer depuis Entraînement → Mobilité.
 
-## Étape 5 (côté ludique) : faite, sur la branche `etape-5-ludique`
+## Étape 5 (côté ludique) : faite et en ligne (branche `etape-5-ludique` fusionnée dans `main`)
 
 - **Onglet Trophées** (remplace Progression, dans la barre du bas sur téléphone) : niveau et caractéristiques (+ caractéristique chouchoute), bilan de la semaine habitudes + entraînement (taux de réussite, journées parfaites, sport, volume, mobilité, danse, tâches, XP) comparé à la semaine d'avant, **petites victoires** des 14 derniers jours, **régularité** (journées parfaites et série de journées parfaites, semaines complètes = un oubli max par habitude et quotas tenus, mois complets ≥ 90 %, séries en cours et records de série), **stats décalées** (profil du matin / du soir, jour fort, journée record, coches, temps investi et tonnage avec équivalences, jours de résistance, habitude la plus fidèle / la plus boudée), derniers records, badges.
 - Logique des habitudes dans `src/domain/fun.ts` (testée dans `fun.test.ts`) ; 15 badges habitudes et tâches en plus des 23 de l'entraînement.

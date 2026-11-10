@@ -8,7 +8,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d
 - Dépôt GitHub public : `Doktom/suivapp`. Production : https://doktom.github.io/suivapp/
 
 ## État actuel (2026-11-10)
-- **V0.1 et V0.2 codées**, **V0.3 Entraînement : étapes 1 à 4 codées** (sport, suivi du sport, mobilité, danse). **Étape 5 (côté ludique) codée sur la branche `etape-5-ludique`** : badges, bilan de la semaine, objectifs sport, records mis en valeur. Suite : voir `docs/REPRISE.md`.
+- **V0.1, V0.2 et V0.3 codées et en ligne** sur https://doktom.github.io/suivapp/ (V0.3 = Entraînement : sport, suivi du sport, mobilité, danse, et l'étape 5 « ludique » avec l'onglet Trophées). **La prochaine étape est à choisir avec l'utilisateur** : pistes dans `docs/REPRISE.md`.
 - Version `package.json` : 0.3.0. 72 tests (Vitest) au vert, build OK.
 - **Phase de test** : le site GitHub Pages est construit **sans Supabase**, donc sans connexion ; les données restent dans le navigateur. Version finale prévue sur le serveur privé **atj-app.com** (o2switch, PHP + SQLite, sans login) : voir `docs/REPRISE.md`.
 
@@ -16,7 +16,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d
 - Échanges, documentation et textes de l'interface **en français** ; code (noms, commentaires) **en anglais**.
 - Pour une demande ouverte (« améliore », « propose ») : **proposer d'abord** une liste priorisée, attendre son choix, puis coder.
 - Rester **simple** : il a refusé le suivi trop détaillé (verres d'eau, nombre de pas). Le sur-mesure est réservé à l'Entraînement.
-- **Livraison (phase de test)** : il construit et teste l'app au fur et à mesure sur GitHub Pages. Claude **pousse sur `main`** une fois l'étape validée (tests + build verts) ; le site se redéploie seul. Le zip via l'interface web de GitHub a échoué (dossiers non envoyés) : ne plus le proposer.
+- **Livraison (phase de test)** : il construit et teste l'app au fur et à mesure sur GitHub Pages. Claude **pousse sur `main`** une fois l'étape validée (tests + build verts) ; le site se redéploie seul. S'il demande une branche, travailler dessus, l'envoyer, puis fusionner dans `main` seulement quand il dit oui. Après un envoi, suivre le déploiement (`gh run watch`) et vérifier la page en ligne. Le zip via l'interface web de GitHub a échoué (dossiers non envoyés) : ne plus le proposer.
 - En fin d'étape : tests + build + essai dans le navigateur (mobile 375 px et PC, console sans erreur), puis mise à jour de `CLAUDE.md`, du cahier des charges et de `docs/REPRISE.md`.
 
 ## Commandes
