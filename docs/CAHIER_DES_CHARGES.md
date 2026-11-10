@@ -168,7 +168,7 @@ Modèles prêts à l'emploi, avec des réglages suggérés modifiables à l'ajou
   - habitude en niveaux : 10 XP au premier niveau, +5 XP par niveau au-dessus (ex. Rapide 10, Normal 15, Complet 20) ;
   - habitude durée / quantité : XP proportionnelle à l'objectif atteint ;
   - habitude à éviter : 10 XP par journée tenue, créditée à la bascule de la journée ;
-  - routine : 10 XP + 2 XP par étape ;
+  - routine : 2 XP par étape faite + l'XP du niveau atteint (10 / 15 / 20), ce qui paie aussi une routine partielle ;
   - tâche : 5 / 10 / 20 XP selon la priorité ; sous-tâche d'un bloc : 5 XP ; bloc terminé : bonus de 25 XP ;
   - bonus de série : +10 % à 7 jours, +25 % à 30 jours, +50 % à 100 jours.
 - Niveau global : XP nécessaire pour le niveau suivant = 100 × niveau^1,5 (valeurs réglables).
@@ -248,7 +248,7 @@ Succès          (id, code, débloqué_le)
 |---|---|---|
 | Interface | **React + TypeScript + Vite** | Standard, rapide, très bien outillé. |
 | Style | **Tailwind CSS** + composants **shadcn/ui** | Rendu sobre et propre rapidement. |
-| Agenda | **FullCalendar** ou composant maison | Vues jour / semaine / mois prêtes à l'emploi. |
+| Agenda | **Composant maison** | Léger, sur mesure (bandeau « cette semaine », états fait / manqué / grâce). |
 | Données + connexion | **Supabase** (Postgres + Auth, offre gratuite) | Données privées protégées par Row Level Security ; accessibles depuis le téléphone et le PC. |
 | Hébergement | **GitHub Pages** ou **Vercel** (gratuits) | Déploiement automatique à chaque push. |
 | Installation sur téléphone | **PWA** (icône sur l'écran d'accueil, sans mode hors-ligne) | Effet « vraie app » sans store ; nécessaire pour les notifications. |
@@ -288,4 +288,3 @@ Succès          (id, code, débloqué_le)
 Aucune question bloquante pour la V0.2. À rediscuter le moment venu :
 1. Récompenses réelles : forme et fonctionnement.
 2. Valeurs exactes d'XP et courbe de niveau, à ajuster à l'usage.
-3. Agenda : FullCalendar ou composant maison, à trancher au début du lot agenda.

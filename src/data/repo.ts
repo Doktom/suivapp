@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
-export type Table = 'families' | 'habit_templates' | 'habits' | 'validations' | 'task_lists' | 'tasks' | 'profile'
+export type Table =
+  | 'families'
+  | 'habit_templates'
+  | 'habits'
+  | 'validations'
+  | 'slips'
+  | 'task_lists'
+  | 'tasks'
+  | 'checklists'
+  | 'events'
+  | 'profile'
 export type Row = { id: string }
 
 export interface Repo {

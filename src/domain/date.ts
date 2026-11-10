@@ -44,3 +44,30 @@ export function formatLongDay(day: string): string {
 export function formatShortDay(day: string): string {
   return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(parse(day))
 }
+
+export function firstOfMonth(day: string): string {
+  return `${day.slice(0, 7)}-01`
+}
+
+/** Same day N months later, clamped to the end of shorter months (31 Jan + 1 month = 28 Feb). */
+export function addMonths(day: string, delta: number): string {
+  const [y, m, d] = day.split('-').map(Number)
+  const first = new Date(Date.UTC(y, m - 1 + delta, 1))
+  const lastDay = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate()
+  first.setUTCDate(Math.min(d, lastDay))
+  return format(first)
+}
+
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parse(to).getTime() - parse(from).getTime()) / 86_400_000)
+}
+
+export function formatMonth(day: string): string {
+  const text = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(parse(day))
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** 'HH:MM' of a local time. */
+export function clockTime(now: Date): string {
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`
+}

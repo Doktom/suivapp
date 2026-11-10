@@ -1,19 +1,23 @@
 import { useState, type FormEvent } from 'react'
 import { useStore } from '../data/store'
-import type { Priority, Task } from '../domain/types'
+import type { Priority, Recurrence, Task } from '../domain/types'
+import { RecurrenceFields } from './RecurrenceFields'
 import { Button, Dialog, Field, inputClass } from './ui'
 
-export function TaskDialog({ task, onClose }: { task: Task | null; onClose: () => void }) {
+export function TaskDialog({ task, defaultDue, onClose }: { task: Task | null; defaultDue?: string; onClose: () => void }) {
   const { data, save } = useStore()
   const [title, setTitle] = useState(task?.title ?? '')
   const [note, setNote] = useState(task?.note ?? '')
   const [listId, setListId] = useState(task?.list_id ?? '')
-  const [due, setDue] = useState(task?.due_date ?? '')
+  const [due, setDue] = useState(task?.due_date ?? defaultDue ?? '')
   const [priority, setPriority] = useState<Priority>(task?.priority ?? 'normal')
+  const [recurrence, setRecurrence] = useState<Recurrence | null>(task?.recurrence ?? null)
+  const isSubtask = !!task?.parent_id
+  const needsDue = recurrence?.mode === 'fixed' && !due
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim() || needsDue) return
     save('tasks', {
       id: task?.id ?? crypto.randomUUID(),
       parent_id: task?.parent_id ?? null,
@@ -24,6 +28,7 @@ export function TaskDialog({ task, onClose }: { task: Task | null; onClose: () =
       list_id: listId || null,
       due_date: due || null,
       priority,
+      recurrence: isSubtask ? null : recurrence,
     } satisfies Task)
     onClose()
   }
@@ -57,7 +62,9 @@ export function TaskDialog({ task, onClose }: { task: Task | null; onClose: () =
         <Field label="Échéance">
           <input type="date" className={inputClass} value={due} onChange={(e) => setDue(e.target.value)} />
         </Field>
-        <Button type="submit" variant="primary">Enregistrer</Button>
+        {!isSubtask && <RecurrenceFields value={recurrence} onChange={setRecurrence} />}
+        {needsDue && <p className="text-sm text-warn">Une répétition à date fixe a besoin d'une échéance.</p>}
+        <Button type="submit" variant="primary" disabled={needsDue}>Enregistrer</Button>
       </form>
     </Dialog>
   )

@@ -4,6 +4,7 @@ import { Layout, type Route } from './components/Layout'
 import { Button, Field, inputClass } from './components/ui'
 import { supabase } from './data/repo'
 import { StoreProvider, useStoreStatus } from './data/store'
+import { Agenda } from './pages/Agenda'
 import { Habits } from './pages/Habits'
 import { Progress } from './pages/Progress'
 import { Settings } from './pages/Settings'
@@ -14,6 +15,7 @@ const ROUTES: Record<Route, () => React.JSX.Element> = {
   today: Today,
   habits: Habits,
   tasks: Tasks,
+  agenda: Agenda,
   progress: Progress,
   settings: Settings,
 }

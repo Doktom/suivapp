@@ -1,10 +1,113 @@
 import { useState, type FormEvent } from 'react'
 import { useStore, useToday } from '../data/store'
-import { MOMENT_LABELS, MOMENTS, type Frequency, type Habit, type Moment, type Tracking } from '../domain/types'
+import {
+  DEFAULT_LEVELS,
+  MOMENT_LABELS,
+  MOMENTS,
+  TRACKING_LABELS,
+  type Avoid,
+  type Frequency,
+  type Habit,
+  type HabitShape,
+  type Level,
+  type Moment,
+  type Step,
+  type Tracking,
+} from '../domain/types'
 import { Button, Dialog, Field, inputClass } from './ui'
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const WEEKDAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+const MAX_LEVELS = 4
+const TRACKINGS: Tracking[] = ['simple', 'levels', 'routine', 'avoid', 'duration', 'quantity']
+const smallButton = 'size-11 flex-none text-muted disabled:opacity-30'
+
+function LevelsEditor({ levels, steps, onChange }: { levels: Level[]; steps: Step[] | null; onChange: (levels: Level[]) => void }) {
+  const update = (i: number, patch: Partial<Level>) => onChange(levels.map((l, j) => (j === i ? { ...l, ...patch } : l)))
+  const toggleStep = (i: number, id: string) => {
+    const current = levels[i].steps
+    update(i, { steps: current.includes(id) ? current.filter((s) => s !== id) : [...current, id] })
+  }
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="pb-1 text-sm font-medium">Niveaux, du plus léger au plus complet</legend>
+      {levels.map((level, i) => (
+        <div key={i} className="flex flex-col gap-1 rounded-lg bg-surface p-2">
+          <div className="flex gap-2">
+            <input aria-label={`Nom du niveau ${i + 1}`} className={inputClass} value={level.name} onChange={(e) => update(i, { name: e.target.value })} />
+            <input aria-label={`Précision du niveau ${i + 1}`} placeholder="ex. 5 min" className={inputClass} value={level.detail} onChange={(e) => update(i, { detail: e.target.value })} />
+            <button type="button" aria-label={`Retirer le niveau ${level.name}`} className={smallButton} onClick={() => onChange(levels.filter((_, j) => j !== i))}>×</button>
+          </div>
+          {steps && steps.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {steps.map((s) => (
+                <label key={s.id} className="flex min-h-9 items-center gap-1.5 rounded-md bg-chip px-2 text-[13px]">
+                  <input type="checkbox" checked={level.steps.includes(s.id)} onChange={() => toggleStep(i, s.id)} />
+                  {s.name || '(étape)'}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      <div className="flex flex-wrap gap-2">
+        {levels.length < MAX_LEVELS && (
+          <Button onClick={() => onChange([...levels, { name: `Niveau ${levels.length + 1}`, detail: '', steps: [] }])}>Ajouter un niveau</Button>
+        )}
+        {levels.length === 0 && <Button onClick={() => onChange(DEFAULT_LEVELS)}>Rapide / Normal / Complet</Button>}
+      </div>
+      {steps && <p className="text-[13px] text-muted">Sans niveau, la routine est validée quand toutes les étapes sont faites. Un niveau sans étape cochée les contient toutes.</p>}
+    </fieldset>
+  )
+}
+
+function StepsEditor({ steps, onChange }: { steps: Step[]; onChange: (steps: Step[]) => void }) {
+  const move = (i: number, delta: number) => {
+    const next = [...steps]
+    ;[next[i], next[i + delta]] = [next[i + delta], next[i]]
+    onChange(next)
+  }
+  return (
+    <fieldset className="flex flex-col gap-1">
+      <legend className="pb-1 text-sm font-medium">Étapes, dans l'ordre</legend>
+      {steps.map((step, i) => (
+        <div key={step.id} className="flex items-center gap-1">
+          <input aria-label={`Étape ${i + 1}`} className={inputClass} value={step.name} onChange={(e) => onChange(steps.map((s) => (s.id === step.id ? { ...s, name: e.target.value } : s)))} />
+          <button type="button" aria-label={`Monter ${step.name}`} disabled={i === 0} className={smallButton} onClick={() => move(i, -1)}>↑</button>
+          <button type="button" aria-label={`Descendre ${step.name}`} disabled={i === steps.length - 1} className={smallButton} onClick={() => move(i, 1)}>↓</button>
+          <button type="button" aria-label={`Retirer ${step.name}`} className={smallButton} onClick={() => onChange(steps.filter((s) => s.id !== step.id))}>×</button>
+        </div>
+      ))}
+      <Button className="self-start" onClick={() => onChange([...steps, { id: crypto.randomUUID().slice(0, 8), name: '' }])}>Ajouter une étape</Button>
+    </fieldset>
+  )
+}
+
+function AvoidEditor({ avoid, onChange }: { avoid: Avoid; onChange: (avoid: Avoid) => void }) {
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="pb-1 text-sm font-medium">Règle</legend>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Seulement avant (facultatif)">
+          <input type="time" className={inputClass} value={avoid.before ?? ''} onChange={(e) => onChange({ ...avoid, before: e.target.value || null })} />
+        </Field>
+        <Field label="Seulement après (facultatif)">
+          <input type="time" className={inputClass} value={avoid.after ?? ''} onChange={(e) => onChange({ ...avoid, after: e.target.value || null })} />
+        </Field>
+        <Field label="Écarts tolérés">
+          <input type="number" min="0" className={inputClass} value={avoid.tolerance} onChange={(e) => onChange({ ...avoid, tolerance: Math.max(0, Number(e.target.value)) })} />
+        </Field>
+        <Field label="Par">
+          <select className={inputClass} value={avoid.period} onChange={(e) => onChange({ ...avoid, period: e.target.value as Avoid['period'] })}>
+            <option value="day">Jour</option>
+            <option value="week">Semaine</option>
+          </select>
+        </Field>
+      </div>
+      <p className="text-[13px] text-muted">La journée est tenue si les écarts ne dépassent pas la tolérance. Elle est validée automatiquement à la bascule de la journée, ou dès l'heure limite passée pour une règle « avant ».</p>
+    </fieldset>
+  )
+}
 
 export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; onClose: () => void }) {
   const { data, save } = useStore()
@@ -17,27 +120,48 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
   const [tracking, setTracking] = useState<Tracking>(habit?.tracking ?? 'simple')
   const [goal, setGoal] = useState(habit?.goal ?? 10)
   const [unit, setUnit] = useState(habit?.unit ?? '')
+  const [levels, setLevels] = useState<Level[]>(habit?.levels ?? [])
+  const [steps, setSteps] = useState<Step[]>(habit?.steps ?? [])
+  const [avoid, setAvoid] = useState<Avoid>(habit?.avoid ?? { before: null, after: null, tolerance: 0, period: 'day' })
   const [frequency, setFrequency] = useState<Frequency>(habit?.frequency ?? { type: 'daily' })
   const [moments, setMoments] = useState<Moment[]>(habit?.moments ?? ['morning'])
   const [time, setTime] = useState(habit?.time_of_day ?? '')
   const [start, setStart] = useState(habit?.start_date ?? today)
   const [end, setEnd] = useState(habit?.end_date ?? '')
 
+  const changeTracking = (t: Tracking) => {
+    setTracking(t)
+    if (t === 'levels' && levels.length === 0) setLevels(DEFAULT_LEVELS)
+    if (t === 'avoid') setMoments(['day'])
+  }
+
   const days = frequency.type === 'weekdays' ? frequency.days : []
   const invalid =
     moments.length === 0 ||
     (frequency.type === 'weekdays' && days.length === 0) ||
-    (tracking !== 'simple' && goal <= 0)
+    ((tracking === 'duration' || tracking === 'quantity') && goal <= 0) ||
+    (tracking === 'levels' && levels.length === 0) ||
+    (tracking === 'routine' && steps.filter((s) => s.name.trim()).length === 0)
 
-  const fields = () => ({
-    name: name.trim(),
-    family_id: familyId || null,
-    tracking,
-    goal: tracking === 'simple' ? 1 : goal,
-    unit: tracking === 'simple' ? '' : tracking === 'duration' ? 'min' : unit.trim(),
-    frequency,
-    moments: MOMENTS.filter((m) => moments.includes(m)),
-  })
+  const fields = (): HabitShape => {
+    const cleanSteps = steps.filter((s) => s.name.trim()).map((s) => ({ ...s, name: s.name.trim() }))
+    const kept = cleanSteps.map((s) => s.id)
+    return {
+      name: name.trim(),
+      family_id: familyId || null,
+      tracking,
+      goal: tracking === 'duration' || tracking === 'quantity' ? goal : 1,
+      unit: tracking === 'duration' ? 'min' : tracking === 'quantity' ? unit.trim() : '',
+      frequency,
+      moments: tracking === 'avoid' ? ['day'] : MOMENTS.filter((m) => moments.includes(m)),
+      levels:
+        tracking === 'levels' || tracking === 'routine'
+          ? levels.map((l, i) => ({ name: l.name.trim() || `Niveau ${i + 1}`, detail: l.detail.trim(), steps: tracking === 'routine' ? l.steps.filter((id) => kept.includes(id)) : [] }))
+          : [],
+      steps: tracking === 'routine' ? cleanSteps : [],
+      avoid: tracking === 'avoid' ? avoid : null,
+    }
+  }
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -67,6 +191,13 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
   const toggleDay = (d: number) =>
     setFrequency({ type: 'weekdays', days: days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort() })
 
+  const changeFrequency = (type: Frequency['type']) => {
+    if (type === 'daily') setFrequency({ type })
+    else if (type === 'weekdays') setFrequency({ type, days: [0, 2, 4] })
+    else if (type === 'every_n') setFrequency({ type, interval: 2 })
+    else setFrequency({ type, count: type === 'per_month' ? 4 : 3 })
+  }
+
   return (
     <Dialog title={existingId ? "Modifier l'habitude" : 'Nouvelle habitude'} onClose={onClose}>
       <form onSubmit={submit} className="flex flex-col gap-3">
@@ -86,13 +217,11 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Suivi">
-            <select className={inputClass} value={tracking} onChange={(e) => setTracking(e.target.value as Tracking)}>
-              <option value="simple">Simple</option>
-              <option value="duration">Durée</option>
-              <option value="quantity">Quantité</option>
+            <select className={inputClass} value={tracking} onChange={(e) => changeTracking(e.target.value as Tracking)}>
+              {TRACKINGS.map((t) => <option key={t} value={t}>{TRACKING_LABELS[t]}</option>)}
             </select>
           </Field>
-          {tracking !== 'simple' && (
+          {(tracking === 'duration' || tracking === 'quantity') && (
             <Field label={tracking === 'duration' ? 'Objectif (min)' : 'Objectif'}>
               <input type="number" min="1" className={inputClass} value={goal} onChange={(e) => setGoal(Number(e.target.value))} />
             </Field>
@@ -104,18 +233,19 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
           )}
         </div>
 
+        {tracking === 'routine' && <StepsEditor steps={steps} onChange={setSteps} />}
+        {(tracking === 'levels' || tracking === 'routine') && (
+          <LevelsEditor levels={levels} steps={tracking === 'routine' ? steps : null} onChange={setLevels} />
+        )}
+        {tracking === 'avoid' && <AvoidEditor avoid={avoid} onChange={setAvoid} />}
+
         <Field label="Fréquence">
-          <select
-            className={inputClass}
-            value={frequency.type}
-            onChange={(e) => {
-              const type = e.target.value as Frequency['type']
-              setFrequency(type === 'daily' ? { type } : type === 'weekdays' ? { type, days: [0, 2, 4] } : { type, count: 3 })
-            }}
-          >
+          <select className={inputClass} value={frequency.type} onChange={(e) => changeFrequency(e.target.value as Frequency['type'])}>
             <option value="daily">Tous les jours</option>
             <option value="weekdays">Certains jours</option>
             <option value="per_week">X fois par semaine</option>
+            <option value="per_month">X fois par mois</option>
+            <option value="every_n">Tous les N jours</option>
           </select>
         </Field>
         {frequency.type === 'weekdays' && (
@@ -132,17 +262,29 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
             <input type="number" min="1" max="7" className={inputClass} value={frequency.count} onChange={(e) => setFrequency({ type: 'per_week', count: Number(e.target.value) })} />
           </Field>
         )}
+        {frequency.type === 'per_month' && (
+          <Field label="Nombre de fois par mois">
+            <input type="number" min="1" max="31" className={inputClass} value={frequency.count} onChange={(e) => setFrequency({ type: 'per_month', count: Number(e.target.value) })} />
+          </Field>
+        )}
+        {frequency.type === 'every_n' && (
+          <Field label="Tous les combien de jours (à partir de la date de début)">
+            <input type="number" min="2" className={inputClass} value={frequency.interval} onChange={(e) => setFrequency({ type: 'every_n', interval: Math.max(1, Number(e.target.value)) })} />
+          </Field>
+        )}
 
-        <fieldset className="flex flex-col gap-1">
-          <legend className="text-sm font-medium">Moments de la journée</legend>
-          <div className="flex gap-2">
-            {MOMENTS.map((m) => (
-              <button key={m} type="button" aria-pressed={moments.includes(m)} onClick={() => toggleMoment(m)} className={`min-h-11 flex-1 rounded-lg text-sm font-medium ${moments.includes(m) ? 'bg-accent text-white' : 'bg-chip'}`}>
-                {MOMENT_LABELS[m]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        {tracking !== 'avoid' && (
+          <fieldset className="flex flex-col gap-1">
+            <legend className="text-sm font-medium">Moments de la journée</legend>
+            <div className="flex gap-2">
+              {MOMENTS.map((m) => (
+                <button key={m} type="button" aria-pressed={moments.includes(m)} onClick={() => toggleMoment(m)} className={`min-h-11 flex-1 rounded-lg text-sm font-medium ${moments.includes(m) ? 'bg-accent text-white' : 'bg-chip'}`}>
+                  {MOMENT_LABELS[m]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Horaire">
@@ -157,6 +299,7 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
         </div>
 
         {moments.length === 0 && <p className="text-sm text-warn">Choisissez au moins un moment.</p>}
+        {tracking === 'routine' && steps.every((s) => !s.name.trim()) && <p className="text-sm text-warn">Ajoutez au moins une étape.</p>}
         <Button type="submit" variant="primary" disabled={invalid}>Enregistrer</Button>
         <Button onClick={saveAsTemplate} disabled={invalid}>Enregistrer comme modèle</Button>
       </form>

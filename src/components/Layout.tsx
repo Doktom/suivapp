@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { isDemo } from '../data/repo'
 
-export type Route = 'today' | 'habits' | 'tasks' | 'progress' | 'settings'
+export type Route = 'today' | 'habits' | 'tasks' | 'agenda' | 'progress' | 'settings'
 
 const ICONS: Record<Route, ReactNode> = {
   today: (
@@ -17,6 +17,12 @@ const ICONS: Record<Route, ReactNode> = {
     </>
   ),
   tasks: <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />,
+  agenda: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
   progress: <path d="M4 20h16M7 20v-6M12 20V9M17 20V4" />,
   settings: (
     <>
@@ -31,6 +37,7 @@ const NAV: [Route, string][] = [
   ['today', "Aujourd'hui"],
   ['habits', 'Habitudes'],
   ['tasks', 'Tâches'],
+  ['agenda', 'Agenda'],
   ['progress', 'Progression'],
   ['settings', 'Réglages'],
 ]
@@ -61,9 +68,9 @@ export function Layout({ route, error, children }: { route: Route; error: string
         <main className="mx-auto max-w-5xl px-5 pt-6 lg:px-10 lg:pt-10">{children}</main>
       </div>
 
-      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-5 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
+      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
         {NAV.map(([r, label]) => (
-          <a key={r} href={`#${r}`} aria-current={r === route ? 'page' : undefined} className={`flex min-h-13 flex-col items-center justify-center gap-0.5 text-[11px] ${color(r)}`}>
+          <a key={r} href={`#${r}`} aria-current={r === route ? 'page' : undefined} className={`flex min-h-13 flex-col items-center justify-center gap-0.5 text-[10px] ${color(r)}`}>
             <Icon route={r} />
             {label}
           </a>

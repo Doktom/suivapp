@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Checklists } from '../components/Checklists'
 import { TaskDialog } from '../components/TaskDialog'
 import { TaskItem } from '../components/TaskItem'
 import { Button, inputClass } from '../components/ui'
@@ -52,6 +53,7 @@ export function Tasks() {
           <Button onClick={() => { removeList(selected); setListId(null) }}>Supprimer la liste « {selected.name} »</Button>
         )}
       </div>
+      <Checklists />
       {creating && <TaskDialog task={null} onClose={() => setCreating(false)} />}
     </>
   )

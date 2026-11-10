@@ -6,7 +6,7 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches et
 La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avant toute nouvelle tâche et la mettre à jour quand une décision est prise.
 
 ## État actuel
-- Phase : **MVP V0.1 codé** (mobile et PC). Supabase branché en production, connexion validée. Conception V0.2 validée (2026-11-10) ; prochaine étape : coder la V0.2, en commençant par les niveaux, les habitudes à éviter et les routines.
+- Phase : **V0.2 codée** (2026-11-10) : niveaux, routines, habitudes à éviter, fréquences mensuelle et tous les N jours, tâches récurrentes, checklists, agenda + événements. Base Supabase à migrer avec `supabase/migration_v0.2.sql`. Prochaine étape : V0.3 (statistiques, succès, PWA, rappels).
 - Sans variables Supabase, l'app tourne en mode démo (localStorage). Règles métier testées dans `src/domain/`.
 - Workflow : `git pull` au début, push sur `main` à la fin (déploie la prod sur GitHub Pages). Fichier de reprise `.md` seulement si demandé en fin de session.
 - Dépôt GitHub : `Doktom/suivapp`.
@@ -35,3 +35,4 @@ La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avan
 - 2026-11-10 : routines = étapes stockées sur l'habitude (pas via les blocs de tâches) ; chaque niveau choisit ses étapes.
 - 2026-11-10 : checklists réutilisables = chaque lancement crée un nouveau bloc ; tâches récurrentes en deux modes (calendrier fixe ou après réalisation).
 - 2026-11-10 : agenda validé tel que spécifié ; habitudes « X fois par semaine » dans un bandeau « cette semaine » ; table événements dédiée.
+- 2026-11-10 : agenda en composant maison (pas FullCalendar) ; XP routine = 2 XP par étape faite + XP du niveau atteint ; écarts notés sur un jour passé comptent toujours ; crédit automatique des habitudes à éviter sur 30 jours en arrière au maximum.

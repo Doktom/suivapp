@@ -4,16 +4,9 @@ import { Button, Dialog, FamilyDot, SectionTitle } from '../components/ui'
 import { useStore, useToday, useValidationIndex } from '../data/store'
 import { addDays } from '../domain/date'
 import { isPaused } from '../domain/schedule'
-import { computeStreak } from '../domain/streak'
-import type { Frequency, Habit, HabitTemplate } from '../domain/types'
-
-const WEEK_NAMES = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.']
-
-function describeFrequency(f: Frequency) {
-  if (f.type === 'daily') return 'Tous les jours'
-  if (f.type === 'weekdays') return f.days.map((d) => WEEK_NAMES[d]).join(', ')
-  return `${f.count} fois par semaine`
-}
+import { computeStreak, STREAK_UNIT } from '../domain/streak'
+import { describeFrequency, describeTracking } from '../domain/describe'
+import type { Habit, HabitTemplate } from '../domain/types'
 
 function HabitLine({ habit, onEdit }: { habit: Habit; onEdit: () => void }) {
   const { save } = useStore()
@@ -21,7 +14,8 @@ function HabitLine({ habit, onEdit }: { habit: Habit; onEdit: () => void }) {
   const index = useValidationIndex()
   const streak = computeStreak(habit, index, today)
   const paused = isPaused(habit, today)
-  const unit = streak.unit === 'weeks' ? 'sem.' : 'j'
+  const unit = STREAK_UNIT[streak.unit]
+  const tracking = describeTracking(habit)
 
   const togglePause = () => {
     const pauses = paused
@@ -35,7 +29,7 @@ function HabitLine({ habit, onEdit }: { habit: Habit; onEdit: () => void }) {
       <div className="min-w-48 flex-1">
         <div className="font-medium">{habit.name}</div>
         <div className="text-[13px] text-muted">
-          {describeFrequency(habit.frequency)} · série {streak.current} {unit} · record {streak.best} {unit}
+          {describeFrequency(habit.frequency)}{tracking ? ` · ${tracking}` : ''} · série {streak.current} {unit} · record {streak.best} {unit}
           {paused ? ' · en pause' : ''}
         </div>
       </div>
@@ -82,7 +76,7 @@ function Catalog({ onClose }: { onClose: () => void }) {
                 <div key={t.id} className="flex items-center gap-2 border-t border-line py-1.5">
                   <div className="min-w-0 flex-1">
                     <div className="font-medium">{t.name}</div>
-                    <div className="text-[13px] text-muted">{describeFrequency(t.frequency)}{t.tracking !== 'simple' ? ` · ${t.goal.toLocaleString('fr-FR')} ${t.unit}` : ''}</div>
+                    <div className="text-[13px] text-muted">{describeFrequency(t.frequency)}{describeTracking(t) ? ` · ${describeTracking(t)}` : ''}</div>
                   </div>
                   {!t.builtin && <button type="button" className="min-h-11 px-2 text-[13px] text-muted" onClick={() => remove('habit_templates', t.id)}>Retirer</button>}
                   <Button disabled={added.includes(t.id)} onClick={() => add(t)}>{added.includes(t.id) ? 'Ajoutée' : 'Ajouter'}</Button>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useStore } from '../data/store'
 import { formatShortDay } from '../domain/date'
+import { describeRecurrence } from '../domain/recurrence'
 import type { Task } from '../domain/types'
 import { TaskDialog } from './TaskDialog'
 import { CheckButton, inputClass, ProgressBar } from './ui'
@@ -22,6 +23,7 @@ export function TaskItem({ task, today, editable = false }: { task: Task; today:
     task.due_date ? formatShortDay(task.due_date) : null,
     list?.name,
     PRIORITY[task.priority] || null,
+    task.recurrence ? `↻ ${describeRecurrence(task.recurrence)}` : null,
   ].filter(Boolean).join(' · ')
 
   const addStep = (e: FormEvent) => {
@@ -35,6 +37,7 @@ export function TaskItem({ task, today, editable = false }: { task: Task; today:
       note: '',
       due_date: null,
       priority: 'normal',
+      recurrence: null,
       completed_at: null,
       xp_earned: 0,
     } satisfies Task)
