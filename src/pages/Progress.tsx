@@ -10,7 +10,8 @@ export function Progress() {
   const families = [...data.families].sort((a, b) => a.position - b.position)
   const habitFamily = new Map(data.habits.map((h) => [h.id, h.family_id]))
   const xpOf = (familyId: string) =>
-    data.validations.filter((v) => habitFamily.get(v.habit_id) === familyId).reduce((s, v) => s + v.xp_earned, 0)
+    data.validations.filter((v) => habitFamily.get(v.habit_id) === familyId).reduce((s, v) => s + v.xp_earned, 0) +
+    data.training_logs.filter((l) => l.family_id === familyId).reduce((s, l) => s + l.xp_earned, 0)
 
   return (
     <>

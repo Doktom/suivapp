@@ -217,16 +217,21 @@ Un onglet **Entraînement**, à part des habitudes, pour le sport, la mobilité 
 1. **Sport** (salle ou maison)
    - **Programme** : des séances-types qui tournent dans l'ordre (ex. Training 1 → 2 → 3 → 1…). L'app propose toujours « la prochaine séance », quel que soit le jour.
    - **Structure d'une séance** : échauffement (articulaire, ou cardio 10 min rameur / escalier) → exercices → circuit éventuel (ex. abdos-gainage en 3 ou 4 tours) → **finisher** (WOD court au poids de corps).
-   - **Prescription par exercice** : groupes de séries (ex. `2x15` puis `3x10`), pyramide (`2x25 à vide / 2x20 / 2x15 / 3x10`), exercice enchaîné sur la dernière série (ex. + 10 fentes bulgares unilatérales), unilatéral, tempo, repos (1 à 2 min).
+   - **Prescription par exercice** : groupes de séries (ex. `2x15` puis `3x10`), pyramide (`2x25 à vide / 2x20 / 2x15 / 3x10`), exercice enchaîné à chaque série ou sur la dernière (ex. + 10 fentes bulgares unilatérales), unilatéral, tempo, repos (1 à 2 min).
+   - Notation « /15 » : `4x15/15` sur un exercice unilatéral = 15 par côté ; `3x15/15` en adducteur / abducteur = 15 adducteurs puis 15 abducteurs enchaînés.
    - **Saisie de chaque série** : répétitions et charge, pré-remplies avec la dernière fois, validées d'un tap ; le minuteur de repos démarre seul.
-   - **Finisher** : formats AMRAP, EMOM, « for time » ou tours, avec le chrono adapté ; une bibliothèque de WODs au poids de corps, avec tirage d'un « WOD du jour ».
+   - **Finisher** : formats AMRAP, EMOM, « for time » ou Tabata, avec le chrono adapté ; une bibliothèque de WODs au poids de corps (modifiable), où l'on choisit son WOD ou on le tire au hasard.
    - **Suivi** : progression par exercice (charge, répétitions, volume), records personnels, volume par semaine, régularité (calendrier des séances, série en semaines, séances par semaine face à l'objectif).
 2. **Mobilité** : routines de mobilité et d'étirement, exercices de kiné, séances de souplesse.
    - Exercices avec consignes précises (que l'utilisateur rédige), durée de tenue, côté gauche / droit.
    - Mode guidé au chrono (tenue, changement de côté, passage à l'exercice suivant) ou simple coche.
    - Les routines en niveaux (Rapide / Normal / Complet) existantes migrent ici.
    - Pas de suivi de la douleur.
-3. **Danse** : salsa, bachata, kizomba (détail à définir).
+3. **Danse** : salsa, bachata, kizomba. **[V0.3, étape 4]**
+   - Cours à horaire fixe chaque semaine (récurrents, visibles dans l'agenda), soirées ajoutées à l'agenda, pratique perso.
+   - Temps passé par danse et par type (cours, soirée, pratique).
+   - Figures apprises / en cours / maîtrisées, par danse.
+   - Objectifs personnels (ex. « maîtriser 5 nouvelles figures de bachata d'ici mars ») avec les moyens d'y arriver : actions concrètes rattachées à l'objectif (pratiquer telle figure, aller à 2 soirées par mois…), et jauge de progression.
 
 **Motivation et côté ludique** : records battus célébrés en fin de séance, objectifs personnels avec jauge, badges propres à l'entraînement, bilan de la semaine, plus tard des programmes progressifs.
 
@@ -331,11 +336,8 @@ Succès          (id, code, débloqué_le)
 
 ## 8. Questions ouvertes
 
-À trancher avant de coder l'Entraînement :
-- Sens de « /15 » dans `3x15/15` et `4x15/15` (par côté, ou deuxième mouvement enchaîné ?).
-- Finisher : bibliothèque de WODs tirés au hasard, ou WOD saisi à chaque séance ?
-- Danse : que suivre (cours, soirées, pratique, figures apprises) ?
-- Séances à la maison : programme à fournir.
+Entraînement, plus tard :
+- Séances à la maison : programme à construire ensemble plus tard.
 
 À rediscuter le moment venu :
 1. Récompenses réelles : forme et fonctionnement.

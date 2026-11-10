@@ -10,7 +10,7 @@ import { MOMENT_LABELS, MOMENTS, type CalendarEvent } from '../domain/types'
 type View = 'day' | 'week' | 'month'
 
 const VIEW_LABELS: Record<View, string> = { day: 'Jour', week: 'Semaine', month: 'Mois' }
-const KIND_LABELS: Record<ItemKind, string> = { habit: 'Habitudes', task: 'Tâches', event: 'Événements' }
+const KIND_LABELS: Record<ItemKind, string> = { habit: 'Habitudes', task: 'Tâches', event: 'Événements', training: 'Entraînement' }
 const STATE_LABELS: Record<ItemState, string> = { done: 'fait', todo: 'à faire', missed: 'manqué', grace: 'jour de grâce', late: 'en retard' }
 const WEEK_HEADERS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const WEEK_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -41,12 +41,13 @@ function EventBlock({ item, onEvent, large = false }: { item: AgendaItem; onEven
   return (
     <button
       type="button"
-      onClick={() => onEvent(item.event!)}
+      // Training sessions are shown here too; they open in the Entraînement tab.
+      onClick={() => (item.event ? onEvent(item.event) : (window.location.hash = '#training'))}
       className={`flex w-full flex-col rounded-lg px-2.5 py-1.5 text-left ${large ? 'min-h-14' : 'min-h-11'}`}
       style={{ background: tint(item.color, 16), borderLeft: `4px solid ${item.color}` }}
     >
       <span className="text-[12px] font-semibold text-muted tabular-nums">{item.when}</span>
-      <span className={`font-medium leading-tight ${large ? 'text-base' : 'text-sm'}`}>{item.title}</span>
+      <span className={`font-medium leading-tight ${large ? 'text-base' : 'text-sm'}`}>{item.kind === 'training' ? `✓ ${item.title}` : item.title}</span>
       {large && item.event?.note && <span className="text-[13px] text-muted">{item.event.note}</span>}
     </button>
   )
@@ -99,7 +100,7 @@ function Row({ item, onToggle }: { item: AgendaItem; onToggle: Toggle }) {
 /** Splits a day's items into events, habits by moment, and tasks. */
 function groups(items: AgendaItem[]) {
   return {
-    events: items.filter((i) => i.kind === 'event'),
+    events: items.filter((i) => i.kind === 'event' || i.kind === 'training'),
     moments: MOMENTS.map((m) => ({ moment: m, items: items.filter((i) => i.kind === 'habit' && i.moment === m) })).filter((g) => g.items.length > 0),
     tasks: items.filter((i) => i.kind === 'task'),
   }
@@ -192,7 +193,7 @@ function DayView({ items, day, today, onEvent, onToggle }: {
 
 function MonthCell({ day, items, today, inMonth, onOpen }: { day: string; items: AgendaItem[]; today: string; inMonth: boolean; onOpen: () => void }) {
   const { done, total } = habitProgress(items)
-  const events = items.filter((i) => i.kind === 'event')
+  const events = items.filter((i) => i.kind === 'event' || i.kind === 'training')
   const tasks = items.filter((i) => i.kind === 'task')
   const lateTasks = tasks.filter((t) => t.state === 'late').length
   const isToday = day === today
@@ -235,7 +236,7 @@ export function Agenda() {
   const streaks = useStreaks()
   const [view, setView] = useState<View>('week')
   const [anchor, setAnchor] = useState(today)
-  const [filters, setFilters] = useState<AgendaFilters>({ kinds: { habit: true, task: true, event: true }, familyId: '', listId: '' })
+  const [filters, setFilters] = useState<AgendaFilters>({ kinds: { habit: true, task: true, event: true, training: true }, familyId: '', listId: '' })
   const [eventDialog, setEventDialog] = useState<{ event: CalendarEvent | null; day: string } | null>(null)
   const [taskDay, setTaskDay] = useState<string | null>(null)
   const [taskBlock, setTaskBlock] = useState<string | null>(null)

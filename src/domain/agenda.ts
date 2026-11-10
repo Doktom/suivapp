@@ -3,7 +3,7 @@ import { isActiveOn, isAvoidOk, isDayDone, isDueOn, isQuota, periodDoneCount, qu
 import type { Streak } from './streak'
 import { MOMENT_LABELS, type CalendarEvent, type Family, type Habit, type Moment, type Slip, type Task } from './types'
 
-export type ItemKind = 'habit' | 'task' | 'event'
+export type ItemKind = 'habit' | 'task' | 'event' | 'training'
 export type ItemState = 'done' | 'todo' | 'missed' | 'grace' | 'late'
 
 export interface AgendaItem {
@@ -35,6 +35,7 @@ export interface AgendaSource {
   events: CalendarEvent[]
   families: Family[]
   slips: Slip[]
+  training_logs: { id: string; name: string; day: string; started_at: string; duration_s: number }[]
 }
 
 const MOMENT_ORDER = { morning: '1', day: '2', evening: '3' } as const
@@ -60,6 +61,22 @@ export function agendaItems(
         state: 'todo',
         color: e.color,
         event: e,
+      })
+    }
+  }
+  if (filters.kinds.training && !filters.familyId && !filters.listId) {
+    for (const l of src.training_logs.filter((l) => l.day === day)) {
+      const start = new Date(l.started_at)
+      const time = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
+      items.push({
+        key: `s-${l.id}`,
+        refId: l.id,
+        kind: 'training',
+        title: `${l.name} · ${Math.round(l.duration_s / 60)} min`,
+        when: time,
+        order: `0${time}`,
+        state: 'done',
+        color: '#B5613C',
       })
     }
   }

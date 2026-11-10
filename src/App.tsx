@@ -9,11 +9,13 @@ import { Habits } from './pages/Habits'
 import { Progress } from './pages/Progress'
 import { Settings } from './pages/Settings'
 import { Tasks } from './pages/Tasks'
+import { Training } from './training/TrainingPage'
 import { Today } from './pages/Today'
 
 const ROUTES: Record<Route, () => React.JSX.Element> = {
   today: Today,
   habits: Habits,
+  training: Training,
   tasks: Tasks,
   agenda: Agenda,
   progress: Progress,

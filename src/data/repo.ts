@@ -11,6 +11,10 @@ export type Table =
   | 'checklists'
   | 'events'
   | 'profile'
+  | 'training_exercises'
+  | 'training_sessions'
+  | 'training_wods'
+  | 'training_logs'
 export type Row = { id: string }
 
 export interface Repo {

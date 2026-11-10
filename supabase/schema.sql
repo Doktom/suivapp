@@ -1,4 +1,5 @@
--- Schéma Suivapp V0.2 (installation neuve). Pour une base V0.1 existante, exécuter migration_v0.2.sql.
+-- Schéma Suivapp (installation neuve) : exécuter ce fichier, puis migration_v0.3.sql (onglet Entraînement).
+-- Pour une base V0.1 existante, exécuter migration_v0.2.sql puis migration_v0.3.sql.
 -- À exécuter une fois dans l'éditeur SQL de Supabase.
 -- Chaque table est privée : la RLS limite les lignes à leur propriétaire.
 

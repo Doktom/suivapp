@@ -2,9 +2,10 @@ import { useEffect, type ReactNode } from 'react'
 import { isDemo } from '../data/repo'
 import { useUndo } from '../data/store'
 
-export type Route = 'today' | 'habits' | 'tasks' | 'agenda' | 'progress' | 'settings'
+export type Route = 'today' | 'habits' | 'training' | 'tasks' | 'agenda' | 'progress' | 'settings'
 
 const ICONS: Record<Route, ReactNode> = {
+  training: <path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12" />,
   today: (
     <>
       <circle cx="12" cy="12" r="4" />
@@ -37,6 +38,7 @@ const ICONS: Record<Route, ReactNode> = {
 const NAV: [Route, string][] = [
   ['today', "Aujourd'hui"],
   ['habits', 'Habitudes'],
+  ['training', 'Entraînement'],
   ['tasks', 'Tâches'],
   ['agenda', 'Agenda'],
   ['progress', 'Progression'],
@@ -64,6 +66,12 @@ function UndoBanner() {
   )
 }
 
+/** On phones, these two live at the top instead of in the bottom bar. */
+const MORE: [Route, string][] = [
+  ['progress', 'Progression'],
+  ['settings', 'Réglages'],
+]
+
 const Icon = ({ route }: { route: Route }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {ICONS[route]}
@@ -87,13 +95,20 @@ export function Layout({ route, error, children }: { route: Route; error: string
       <div className="min-w-0 flex-1 pb-24 lg:pb-8">
         {isDemo && <p className="bg-chip px-5 py-2 text-center text-xs text-muted">Mode démo : les données restent dans ce navigateur.</p>}
         {error && <p role="alert" className="bg-warn px-5 py-2 text-center text-sm text-white">{error}</p>}
-        <main className="mx-auto max-w-5xl px-5 pt-6 lg:px-10 lg:pt-10">{children}</main>
+        <div className="flex justify-end gap-1 px-3 pt-2 lg:hidden">
+          {MORE.map(([r, label]) => (
+            <a key={r} href={`#${r}`} aria-label={label} aria-current={r === route ? 'page' : undefined} className={`flex size-11 items-center justify-center rounded-lg ${r === route ? 'bg-chip text-accent' : 'text-muted'}`}>
+              <Icon route={r} />
+            </a>
+          ))}
+        </div>
+        <main className="mx-auto max-w-5xl px-5 pt-2 lg:px-10 lg:pt-10">{children}</main>
       </div>
 
       <UndoBanner />
 
-      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
-        {NAV.map(([r, label]) => (
+      <nav aria-label="Navigation principale" className="fixed inset-x-0 bottom-0 grid grid-cols-5 border-t border-line bg-surface px-1 pt-1.5 pb-2.5 lg:hidden">
+        {NAV.filter(([r]) => !MORE.some(([m]) => m === r)).map(([r, label]) => (
           <a key={r} href={`#${r}`} aria-current={r === route ? 'page' : undefined} className={`flex min-h-13 flex-col items-center justify-center gap-0.5 text-[10px] ${color(r)}`}>
             <Icon route={r} />
             {label}

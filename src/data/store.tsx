@@ -20,6 +20,8 @@ import {
   type XpSettings,
 } from '../domain/types'
 import { DEFAULT_XP, levelsValidationXp, routineXp, taskXp, validationXp } from '../domain/xp'
+import { buildProgram } from '../training/program'
+import type { Exercise, TrainingLog, TrainingSession, Wod } from '../training/types'
 import { repo, type Row, type Table } from './repo'
 
 export interface Data {
@@ -33,12 +35,31 @@ export interface Data {
   checklists: Checklist[]
   events: CalendarEvent[]
   profile: Profile[]
+  training_exercises: Exercise[]
+  training_sessions: TrainingSession[]
+  training_wods: Wod[]
+  training_logs: TrainingLog[]
 }
 
-const TABLES: Table[] = ['families', 'habit_templates', 'habits', 'validations', 'slips', 'task_lists', 'tasks', 'checklists', 'events', 'profile']
+const TABLES: Table[] = [
+  'families',
+  'habit_templates',
+  'habits',
+  'validations',
+  'slips',
+  'task_lists',
+  'tasks',
+  'checklists',
+  'events',
+  'profile',
+  'training_exercises',
+  'training_sessions',
+  'training_wods',
+  'training_logs',
+]
 
 const MIGRATION_MESSAGE =
-  "La base Supabase n'est pas à jour : exécutez supabase/migration_v0.2.sql dans l'éditeur SQL de Supabase, puis rechargez la page."
+  "La base Supabase n'est pas à jour : exécutez supabase/migration_v0.2.sql puis supabase/migration_v0.3.sql dans l'éditeur SQL de Supabase, puis rechargez la page."
 
 /** Errors raised when the database lacks a table or a column of this version. */
 function isSchemaError(e: unknown): boolean {
@@ -150,16 +171,23 @@ function useStoreValue() {
         for (const c of seed.checklists) await repo.upsert('checklists', c)
         await repo.upsert('profile', profile)
         Object.assign(loaded, seed, { profile: [profile] })
-      } else {
-        for (const t of numberSubtasks(loaded.tasks)) {
-          await repo.upsert('tasks', t)
-          loaded.tasks = loaded.tasks.map((x) => (x.id === t.id ? t : x))
-        }
-        // Accounts created before a catalogue update receive the new built-in templates.
-        for (const t of syncCatalog(loaded.families, loaded.habit_templates)) {
-          await repo.upsert('habit_templates', t)
-          loaded.habit_templates = [...loaded.habit_templates.filter((x) => x.id !== t.id), t]
-        }
+      }
+      // The gym program and the finisher library, loaded once when the training tables are empty.
+      if (loaded.training_exercises.length === 0 && loaded.training_sessions.length === 0) {
+        const program = buildProgram()
+        for (const e of program.exercises) await repo.upsert('training_exercises', e)
+        for (const s of program.sessions) await repo.upsert('training_sessions', s)
+        for (const w of program.wods) await repo.upsert('training_wods', w)
+        Object.assign(loaded, { training_exercises: program.exercises, training_sessions: program.sessions, training_wods: program.wods })
+      }
+      // Rows from earlier versions: sub-task positions, and the built-in templates of the current catalogue.
+      for (const t of numberSubtasks(loaded.tasks)) {
+        await repo.upsert('tasks', t)
+        loaded.tasks = loaded.tasks.map((x) => (x.id === t.id ? t : x))
+      }
+      for (const t of syncCatalog(loaded.families, loaded.habit_templates)) {
+        await repo.upsert('habit_templates', t)
+        loaded.habit_templates = [...loaded.habit_templates.filter((x) => x.id !== t.id), t]
       }
       setData(loaded)
     }
@@ -437,7 +465,11 @@ export function useStreaks(): Map<string, Streak> {
 
 export function useTotalXp() {
   const { data } = useStore()
-  return data.validations.reduce((s, v) => s + v.xp_earned, 0) + data.tasks.reduce((s, t) => s + t.xp_earned, 0)
+  return (
+    data.validations.reduce((s, v) => s + v.xp_earned, 0) +
+    data.tasks.reduce((s, t) => s + t.xp_earned, 0) +
+    data.training_logs.reduce((s, l) => s + l.xp_earned, 0)
+  )
 }
 
 export function useUndo() {
