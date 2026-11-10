@@ -3,7 +3,10 @@ import { Button, Dialog, Field, inputClass, ProgressBar, SectionTitle } from '..
 import { useStore } from '../data/store'
 import { addDays, formatShortDay, mondayOf } from '../domain/date'
 import { unlockSound } from './chrono'
+import { LogDetail } from './LogDetail'
 import { draftSets, formatDuration, nextSession, rotation, volume } from './logic'
+import { ProgramEditor } from './ProgramEditor'
+import { ProgressView } from './ProgressView'
 import { readDraft, SessionRunner, writeDraft, type Draft } from './SessionRunner'
 import { FEELING_LABELS, WOD_FORMAT_LABELS, type Discipline, type TrainingLog, type TrainingSession, type Wod, type WodFormat } from './types'
 
@@ -173,14 +176,42 @@ function SessionCard({ session, logs, onStart, highlight }: { session: TrainingS
   )
 }
 
+type SportView = 'sessions' | 'progress' | 'program'
+const SPORT_VIEWS: [SportView, string][] = [
+  ['sessions', 'Séances'],
+  ['progress', 'Progression'],
+  ['program', 'Programme'],
+]
+const HISTORY_SHOWN = 15
+
 function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
+  const { data } = useStore()
+  const [view, setView] = useState<SportView>('sessions')
+  const logs = data.training_logs.filter((l) => l.discipline === 'sport')
+  const chip = (active: boolean) => `min-h-9 rounded-full px-3 text-[13px] font-medium ${active ? 'bg-accent text-white' : 'bg-chip'}`
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Vue">
+        {SPORT_VIEWS.map(([v, label]) => (
+          <button key={v} type="button" aria-pressed={view === v} className={chip(view === v)} onClick={() => setView(v)}>{label}</button>
+        ))}
+      </div>
+      {view === 'sessions' && <SportSessions logs={logs} onStart={onStart} />}
+      {view === 'progress' && <ProgressView logs={logs} />}
+      {view === 'program' && <ProgramEditor />}
+    </div>
+  )
+}
+
+function SportSessions({ logs, onStart }: { logs: TrainingLog[]; onStart: (s: TrainingSession) => void }) {
   const { data, today } = useStore()
   const [editingWod, setEditingWod] = useState<Wod | null>(null)
   const [creatingWod, setCreatingWod] = useState(false)
-  const logs = data.training_logs.filter((l) => l.discipline === 'sport')
+  const [detail, setDetail] = useState<TrainingLog | null>(null)
   const sessions = rotation(data.training_sessions)
+  const home = rotation(data.training_sessions, 'home')
   const next = nextSession(data.training_sessions, logs)
-  const history = [...logs].sort((a, b) => b.started_at.localeCompare(a.started_at)).slice(0, 10)
+  const history = [...logs].sort((a, b) => b.started_at.localeCompare(a.started_at)).slice(0, HISTORY_SHOWN)
 
   return (
     <div className="flex flex-col gap-5">
@@ -188,7 +219,9 @@ function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
         <div className="flex flex-col gap-2">
           {next && <SessionCard session={next} logs={logs} onStart={() => onStart(next)} highlight />}
           {sessions.filter((s) => s.id !== next?.id).map((s) => <SessionCard key={s.id} session={s} logs={logs} onStart={() => onStart(s)} highlight={false} />)}
-          {sessions.length === 0 && <p className="text-muted">Aucune séance de salle.</p>}
+          {sessions.length === 0 && <p className="text-muted">Aucune séance de salle : crée-la dans « Programme ».</p>}
+          {home.length > 0 && <p className="pt-2 text-[12px] font-semibold tracking-wide text-muted uppercase">À la maison</p>}
+          {home.map((s) => <SessionCard key={s.id} session={s} logs={logs} onStart={() => onStart(s)} highlight={false} />)}
         </div>
         <Regularity logs={logs} today={today} />
       </div>
@@ -197,7 +230,7 @@ function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
         <SectionTitle>Historique</SectionTitle>
         {history.length === 0 && <p className="border-t border-line py-4 text-muted">Pas encore de séance : lance la prochaine !</p>}
         {history.map((l) => (
-          <div key={l.id} className="flex flex-wrap items-center gap-x-3 border-t border-line py-2">
+          <button key={l.id} type="button" onClick={() => setDetail(l)} className="flex w-full flex-wrap items-center gap-x-3 border-t border-line py-2 text-left">
             <span className="w-16 text-[13px] text-muted">{formatShortDay(l.day)}</span>
             <span className="min-w-40 flex-1 font-medium">{l.name}</span>
             <span className="text-[13px] text-muted tabular-nums">
@@ -206,7 +239,7 @@ function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
               {l.records.length ? ` · ${l.records.length} record${l.records.length > 1 ? 's' : ''}` : ''}
             </span>
             <span className="text-[13px] font-medium text-accent">+{l.xp_earned} XP</span>
-          </div>
+          </button>
         ))}
       </section>
 
@@ -227,6 +260,7 @@ function Sport({ onStart }: { onStart: (s: TrainingSession) => void }) {
           ))}
         </div>
       </section>
+      {detail && <LogDetail log={detail} onClose={() => setDetail(null)} />}
       {(editingWod || creatingWod) && <WodDialog wod={editingWod} onClose={() => { setEditingWod(null); setCreatingWod(false) }} />}
     </div>
   )

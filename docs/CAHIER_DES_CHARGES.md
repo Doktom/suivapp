@@ -221,7 +221,8 @@ Un onglet **Entraînement**, à part des habitudes, pour le sport, la mobilité 
    - Notation « /15 » : `4x15/15` sur un exercice unilatéral = 15 par côté ; `3x15/15` en adducteur / abducteur = 15 adducteurs puis 15 abducteurs enchaînés.
    - **Saisie de chaque série** : répétitions et charge, pré-remplies avec la dernière fois, validées d'un tap ; le minuteur de repos démarre seul.
    - **Finisher** : formats AMRAP, EMOM, « for time » ou Tabata, avec le chrono adapté ; une bibliothèque de WODs au poids de corps (modifiable), où l'on choisit son WOD ou on le tire au hasard.
-   - **Suivi** : progression par exercice (charge, répétitions, volume), records personnels, volume par semaine, régularité (calendrier des séances, série en semaines, séances par semaine face à l'objectif).
+   - **Suivi** : progression par exercice (charge, répétitions, volume), records personnels, volume par semaine, régularité (calendrier des séances, série en semaines, séances par semaine face à l'objectif), détail de chaque séance passée.
+   - **Programme modifiable dans l'app** : séances (ordre de rotation, lieu, échauffement, finisher), exercices et séries écrites comme sur la fiche (« 2x15 / 3x10 tempo »), repos, mouvements enchaînés, circuits ; bibliothèque d'exercices.
 2. **Mobilité** : routines de mobilité et d'étirement, exercices de kiné, séances de souplesse.
    - Exercices avec consignes précises (que l'utilisateur rédige), durée de tenue, côté gauche / droit.
    - Mode guidé au chrono (tenue, changement de côté, passage à l'exercice suivant) ou simple coche.

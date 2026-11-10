@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { clock, draftSets, findRecords, formatDuration, nextSession, randomWod, sessionXp, volume } from './logic'
 import { buildProgram } from './program'
+import { exerciseHistory, formatPrescription, parsePrescription, personalRecords, weeklyVolume } from './stats'
 import { wodPhase } from './WodTimer'
 import type { LoggedSet, TrainingLog } from './types'
 
@@ -100,5 +101,26 @@ describe('chrono du finisher', () => {
   it('s’arrête au temps limite d’un « for time »', () => {
     expect(wodPhase(forTime, 60).over).toBe(false)
     expect(wodPhase(forTime, 720).over).toBe(true)
+  })
+})
+
+describe('suivi de progression', () => {
+  const exercise = program.exercises[0]
+  const set = (weight: number, reps: number): LoggedSet => ({ item_id: 'i', exercise_id: exercise.id, index: 0, reps, weight, done: true, chained: false })
+  const logs = [log(t1.id, '2026-11-03T18:00', [set(20, 15), set(25, 12)]), log(t1.id, '2026-11-10T18:00', [set(27.5, 10)])]
+  it('trace une séance par point, avec la charge maximale', () => {
+    expect(exerciseHistory(exercise.id, logs).map((p) => [p.day, p.weight, p.reps])).toEqual([['2026-11-03', 25, 15], ['2026-11-10', 27.5, 10]])
+  })
+  it('calcule le volume par semaine', () => {
+    expect(weeklyVolume(logs, '2026-11-10', 2).map((w) => w.volume)).toEqual([600, 275])
+  })
+  it('donne les records avec leur date', () => {
+    expect(personalRecords(logs, program.exercises)[0]).toMatchObject({ weight: 27.5, weightDay: '2026-11-10', reps: 15, repsDay: '2026-11-03', sessions: 2 })
+  })
+  it('lit et réécrit une prescription', () => {
+    const sets = parsePrescription('2x25 à vide / 2x20 / 3x10 tempo')
+    expect(sets?.map((s) => s.reps)).toEqual([25, 25, 20, 20, 10, 10, 10])
+    expect(sets && formatPrescription(sets)).toBe('2x25 à vide / 2x20 / 3x10 tempo')
+    expect(parsePrescription('trois séries')).toBe(null)
   })
 })
