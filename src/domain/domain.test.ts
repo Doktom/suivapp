@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays, addMonths, logicalDay, mondayOf, weekday } from './date'
+import { describeFrequency, weekdaysPreset } from './describe'
 import { fixedOccurrences, nextDate } from './recurrence'
 import { indexValidations, isAvoidOk, isAvoidSettled, isDueOn, reachedLevel, slipCounts } from './schedule'
 import { computeStreak } from './streak'
@@ -198,5 +199,18 @@ describe('V0.2 — tâches récurrentes', () => {
     const monthly = { mode: 'fixed', interval: 1, unit: 'month' } as const
     expect(fixedOccurrences('2026-11-15', monthly, '2026-11-10')).toEqual([])
     expect(fixedOccurrences('2026-09-05', monthly, '2026-11-10')).toEqual(['2026-10-05', '2026-11-05', '2026-12-05'])
+  })
+})
+
+describe('fréquences en semaine / week-end', () => {
+  it('reconnaît et décrit les deux préréglages', () => {
+    expect(weekdaysPreset([4, 3, 2, 1, 0])).toBe('workweek')
+    expect(weekdaysPreset([5, 6])).toBe('weekend')
+    expect(weekdaysPreset([0, 2])).toBe(null)
+    expect(describeFrequency({ type: 'weekdays', days: [5, 6] })).toBe('Le week-end')
+  })
+  it('planifie le week-end seulement samedi et dimanche', () => {
+    const h = habit({ type: 'weekdays', days: [5, 6] })
+    expect(['2026-11-13', '2026-11-14', '2026-11-15'].map((d) => isDueOn(h, done(), d))).toEqual([false, true, true])
   })
 })

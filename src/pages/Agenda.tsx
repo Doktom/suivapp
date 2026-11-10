@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { EventDialog } from '../components/EventDialog'
 import { TaskDialog } from '../components/TaskDialog'
-import { Button, inputClass, ProgressBar } from '../components/ui'
+import { Button, inputClass, ProgressBar, tint } from '../components/ui'
 import { useStore, useToday, useValidationIndex } from '../data/store'
 import { agendaItems, quotaLines, type AgendaFilters, type AgendaItem, type ItemKind, type ItemState } from '../domain/agenda'
 import { addDays, addMonths, firstOfMonth, formatLongDay, formatMonth, formatShortDay, mondayOf } from '../domain/date'
 import { computeStreak } from '../domain/streak'
-import type { CalendarEvent } from '../domain/types'
+import { MOMENT_LABELS, MOMENTS, type CalendarEvent } from '../domain/types'
 
 type View = 'day' | 'week' | 'month'
 
@@ -14,30 +14,195 @@ const VIEW_LABELS: Record<View, string> = { day: 'Jour', week: 'Semaine', month:
 const KIND_LABELS: Record<ItemKind, string> = { habit: 'Habitudes', task: 'Tâches', event: 'Événements' }
 const STATE_LABELS: Record<ItemState, string> = { done: 'fait', todo: 'à faire', missed: 'manqué', grace: 'jour de grâce', late: 'en retard' }
 const WEEK_HEADERS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const WEEK_LONG = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 
-const stateClass = (s: ItemState) =>
-  s === 'done' ? 'text-muted line-through' : s === 'missed' || s === 'late' ? 'text-warn' : s === 'grace' ? 'text-warn italic' : ''
-
-function Mark({ item }: { item: AgendaItem }) {
-  const shape = item.kind === 'event' ? 'rounded-sm' : item.kind === 'task' ? 'rounded-[3px] border-2 bg-transparent' : 'rounded-full'
-  const fill = item.state === 'done' || item.kind === 'event' ? { background: item.color, borderColor: item.color } : { borderColor: item.color, border: `2px solid ${item.color}` }
-  return <span aria-hidden="true" className={`inline-block size-2.5 flex-none ${shape}`} style={fill} />
+/** Status of an item, drawn the same way everywhere: check when done, ring when to do, cross when missed. */
+function StateIcon({ item }: { item: AgendaItem }) {
+  const color = item.state === 'missed' || item.state === 'late' ? 'var(--color-warn)' : item.color
+  const square = item.kind === 'task'
+  const shape = square ? <rect x="2" y="2" width="14" height="14" rx="3" /> : <circle cx="9" cy="9" r="7" />
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="flex-none">
+      {item.state === 'done' ? (
+        <g fill={color} stroke={color} strokeWidth="1.5">
+          {shape}
+          <path d="M5.5 9.2 8 11.6l4.5-5" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      ) : (
+        <g fill="none" stroke={color} strokeWidth="2" strokeDasharray={item.state === 'grace' ? '3 2.5' : undefined}>
+          {shape}
+          {(item.state === 'missed' || item.state === 'late') && <path d="M6.5 6.5l5 5M11.5 6.5l-5 5" strokeLinecap="round" />}
+        </g>
+      )}
+    </svg>
+  )
 }
 
-function ItemLine({ item, onEvent, compact = false }: { item: AgendaItem; onEvent: (e: CalendarEvent) => void; compact?: boolean }) {
-  const content = (
-    <>
-      <Mark item={item} />
-      {!compact && <span className="w-20 flex-none text-[13px] text-muted tabular-nums">{item.when}</span>}
-      <span className={`min-w-0 flex-1 ${compact ? 'leading-tight break-words' : 'truncate'} ${stateClass(item.state)}`}>{item.title}</span>
-      {!compact && item.state !== 'todo' && <span className={`flex-none text-[12px] ${stateClass(item.state).replace('line-through', '')}`}>{STATE_LABELS[item.state]}</span>}
-    </>
+function EventBlock({ item, onEvent, large = false }: { item: AgendaItem; onEvent: (e: CalendarEvent) => void; large?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onEvent(item.event!)}
+      className={`flex w-full flex-col rounded-lg px-2.5 py-1.5 text-left ${large ? 'min-h-14' : 'min-h-11'}`}
+      style={{ background: tint(item.color, 16), borderLeft: `4px solid ${item.color}` }}
+    >
+      <span className="text-[12px] font-semibold tabular-nums" style={{ color: item.color }}>{item.when}</span>
+      <span className={`font-medium leading-tight ${large ? 'text-base' : 'text-sm'}`}>{item.title}</span>
+      {large && item.event?.note && <span className="text-[13px] text-muted">{item.event.note}</span>}
+    </button>
   )
-  const cls = `flex w-full gap-2 text-left ${compact ? 'min-h-7 items-baseline py-0.5 text-[13px]' : 'min-h-11 items-center border-t border-line'}`
-  return item.event ? (
-    <button type="button" className={cls} onClick={() => onEvent(item.event!)} aria-label={`${item.title}, ${item.when}`}>{content}</button>
-  ) : (
-    <div className={cls}>{content}</div>
+}
+
+/** One habit or task as a compact pill. */
+function Pill({ item }: { item: AgendaItem }) {
+  const done = item.state === 'done'
+  const bad = item.state === 'missed' || item.state === 'late'
+  return (
+    <span
+      title={`${item.title} — ${STATE_LABELS[item.state]}`}
+      className={`inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-[13px] ${done ? 'text-muted' : bad ? 'text-warn' : ''}`}
+      style={{ background: done ? 'var(--color-chip)' : bad ? tint('#85500f', 10) : tint(item.color, 14) }}
+    >
+      <StateIcon item={item} />
+      <span className="truncate">{item.title}</span>
+      {item.kind === 'habit' && /^\d/.test(item.when) && <span className="text-[12px] text-muted tabular-nums">{item.when}</span>}
+    </span>
+  )
+}
+
+/** One full-width line, for the day view. */
+function Row({ item }: { item: AgendaItem }) {
+  const bad = item.state === 'missed' || item.state === 'late'
+  return (
+    <div className="flex min-h-11 items-center gap-3 border-t border-line">
+      <StateIcon item={item} />
+      <span className={`min-w-0 flex-1 ${item.state === 'done' ? 'text-muted' : ''}`}>{item.title}</span>
+      {/^\d/.test(item.when) && <span className="text-[13px] text-muted tabular-nums">{item.when}</span>}
+      {item.state !== 'todo' && <span className={`text-[12px] ${bad ? 'text-warn' : 'text-muted'}`}>{STATE_LABELS[item.state]}</span>}
+    </div>
+  )
+}
+
+/** Splits a day's items into events, habits by moment, and tasks. */
+function groups(items: AgendaItem[]) {
+  return {
+    events: items.filter((i) => i.kind === 'event'),
+    moments: MOMENTS.map((m) => ({ moment: m, items: items.filter((i) => i.kind === 'habit' && i.moment === m) })).filter((g) => g.items.length > 0),
+    tasks: items.filter((i) => i.kind === 'task'),
+  }
+}
+
+const GroupLabel = ({ children }: { children: string }) => (
+  <span className="w-16 flex-none pt-1.5 text-[12px] font-semibold tracking-wide text-muted uppercase">{children}</span>
+)
+
+function habitProgress(items: AgendaItem[]) {
+  const habits = items.filter((i) => i.kind === 'habit')
+  return { done: habits.filter((i) => i.state === 'done').length, total: habits.length }
+}
+
+/** A day of the week view: date on the left, its content on the right. */
+function WeekDay({ day, index, items, today, onOpen, onEvent }: {
+  day: string
+  index: number
+  items: AgendaItem[]
+  today: string
+  onOpen: () => void
+  onEvent: (e: CalendarEvent) => void
+}) {
+  const { events, moments, tasks } = groups(items)
+  const { done, total } = habitProgress(items)
+  const isToday = day === today
+  return (
+    <div className={`flex flex-col gap-3 rounded-xl border bg-surface p-3 sm:flex-row sm:gap-4 ${isToday ? 'border-accent' : 'border-line'} ${day < today ? 'opacity-80' : ''}`}>
+      <button type="button" onClick={onOpen} aria-label={`Voir le ${formatLongDay(day)}`} className="flex flex-none items-center gap-3 text-left sm:w-24 sm:flex-col sm:items-start sm:gap-0.5">
+        <span className={`text-[13px] font-semibold ${isToday ? 'text-accent' : 'text-muted'}`}>{isToday ? "Aujourd'hui" : WEEK_LONG[index]}</span>
+        <span className="font-display text-2xl leading-none font-semibold tabular-nums">{Number(day.slice(8))}</span>
+        <span className="text-[12px] text-muted">{formatShortDay(day).replace(/^\d+\s/, '')}</span>
+        {total > 0 && (
+          <span className="ml-auto w-20 sm:mt-1.5 sm:ml-0">
+            <ProgressBar thin percent={(done / total) * 100} />
+            <span className="text-[11px] text-muted tabular-nums">{done}/{total} habitudes</span>
+          </span>
+        )}
+      </button>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {items.length === 0 && <p className="pt-1 text-[13px] text-muted">Rien de prévu.</p>}
+        {events.length > 0 && (
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {events.map((e) => <EventBlock key={e.key} item={e} onEvent={onEvent} />)}
+          </div>
+        )}
+        {moments.map((g) => (
+          <div key={g.moment} className="flex gap-2">
+            <GroupLabel>{MOMENT_LABELS[g.moment]}</GroupLabel>
+            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">{g.items.map((i) => <Pill key={i.key} item={i} />)}</div>
+          </div>
+        ))}
+        {tasks.length > 0 && (
+          <div className="flex gap-2">
+            <GroupLabel>Tâches</GroupLabel>
+            <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">{tasks.map((i) => <Pill key={i.key} item={i} />)}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DayView({ items, onEvent }: { items: AgendaItem[]; onEvent: (e: CalendarEvent) => void }) {
+  const { events, moments, tasks } = groups(items)
+  const section = (title: string, children: React.ReactNode) => (
+    <section className="pb-4">
+      <h2 className="pb-1 text-[13px] font-semibold tracking-wide text-muted uppercase">{title}</h2>
+      {children}
+    </section>
+  )
+  return (
+    <div className="max-w-3xl">
+      {items.length === 0 && <p className="border-t border-line py-4 text-muted">Rien de prévu ce jour.</p>}
+      {events.length > 0 && section('Événements', <div className="flex flex-col gap-2">{events.map((e) => <EventBlock key={e.key} item={e} onEvent={onEvent} large />)}</div>)}
+      {moments.map((g) => <div key={g.moment}>{section(MOMENT_LABELS[g.moment], g.items.map((i) => <Row key={i.key} item={i} />))}</div>)}
+      {tasks.length > 0 && section('Tâches', tasks.map((i) => <Row key={i.key} item={i} />))}
+    </div>
+  )
+}
+
+function MonthCell({ day, items, today, inMonth, onOpen }: { day: string; items: AgendaItem[]; today: string; inMonth: boolean; onOpen: () => void }) {
+  const { done, total } = habitProgress(items)
+  const events = items.filter((i) => i.kind === 'event')
+  const tasks = items.filter((i) => i.kind === 'task')
+  const lateTasks = tasks.filter((t) => t.state === 'late').length
+  const isToday = day === today
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`${formatLongDay(day)} : ${events.length} événements, ${done} sur ${total} habitudes, ${tasks.length} tâches`}
+      className={`flex min-h-20 min-w-0 flex-col gap-1 rounded-lg border p-1.5 text-left lg:min-h-28 ${isToday ? 'border-accent bg-surface' : 'border-line bg-surface'} ${inMonth ? '' : 'opacity-35'}`}
+    >
+      <span className={`flex size-6 items-center justify-center rounded-full text-[13px] font-semibold tabular-nums ${isToday ? 'bg-accent text-white' : ''}`}>{Number(day.slice(8))}</span>
+      {events.slice(0, 2).map((e) => (
+        <span key={e.key} className="w-full truncate rounded px-1 text-[11px] leading-5 font-medium lg:text-[12px]" style={{ background: tint(e.color, 18), borderLeft: `3px solid ${e.color}` }}>
+          {e.title}
+        </span>
+      ))}
+      {events.length > 2 && <span className="text-[11px] text-muted">+{events.length - 2}</span>}
+      <span className="mt-auto flex w-full flex-col gap-0.5">
+        {tasks.length > 0 && (
+          <span className={`text-[11px] lg:text-[12px] ${lateTasks ? 'text-warn' : 'text-muted'}`}>
+            {tasks.length} tâche{tasks.length > 1 ? 's' : ''}
+          </span>
+        )}
+        {total > 0 && day > today && <span className="hidden text-[11px] text-muted lg:block">{total} habitudes</span>}
+        {total > 0 && day <= today && (
+          <>
+            <ProgressBar thin percent={(done / total) * 100} />
+            <span className="hidden text-[11px] text-muted tabular-nums lg:block">{done}/{total} habitudes</span>
+          </>
+        )}
+      </span>
+    </button>
   )
 }
 
@@ -85,7 +250,7 @@ export function Agenda() {
         </div>
         <div className="flex w-full items-center text-sm sm:w-auto">
           <button type="button" aria-label="Période précédente" className="size-11 text-lg" onClick={() => step(-1)}>‹</button>
-          <span className="min-w-0 flex-1 text-center font-medium sm:min-w-40">{title}</span>
+          <span className="min-w-0 flex-1 text-center font-display text-base font-semibold sm:min-w-44">{title}</span>
           <button type="button" aria-label="Période suivante" className="size-11 text-lg" onClick={() => step(1)}>›</button>
           <Button className="ml-1" onClick={() => setAnchor(today)}>Aujourd'hui</Button>
         </div>
@@ -108,42 +273,27 @@ export function Agenda() {
       </div>
 
       {view !== 'month' && quota.length > 0 && (
-        <section aria-label="Cette semaine" className="mb-4 rounded-xl bg-surface p-3">
-          <h2 className="pb-1 text-[13px] font-semibold text-muted">Cette semaine · sans jour fixe</h2>
-          <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+        <section aria-label="Cette semaine" className="mb-4 rounded-xl border border-line bg-surface p-3">
+          <h2 className="pb-1.5 text-[12px] font-semibold tracking-wide text-muted uppercase">Cette semaine · sans jour fixe</h2>
+          <div className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {quota.map((q) => (
               <div key={q.habit.id} className="flex items-center gap-2 text-sm">
                 <span className="min-w-0 flex-1 truncate">{q.habit.name}</span>
                 <div className="w-16"><ProgressBar thin percent={(q.done / q.quota) * 100} /></div>
-                <span className="w-24 text-right text-[13px] text-muted tabular-nums">{q.done} / {q.quota}{q.monthly ? ' ce mois' : ''}</span>
+                <span className={`w-24 text-right text-[13px] tabular-nums ${q.done >= q.quota ? 'font-medium text-accent' : 'text-muted'}`}>{q.done} / {q.quota}{q.monthly ? ' ce mois' : ''}</span>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {view === 'day' && (
-        <div className="max-w-3xl">
-          {itemsOf(anchor).length === 0 && <p className="border-t border-line py-4 text-muted">Rien de prévu ce jour.</p>}
-          {itemsOf(anchor).map((item) => <ItemLine key={item.key} item={item} onEvent={openEvent} />)}
-        </div>
-      )}
+      {view === 'day' && <DayView items={itemsOf(anchor)} onEvent={openEvent} />}
 
       {view === 'week' && (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7 xl:gap-2">
-          {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day, i) => {
-            const items = itemsOf(day)
-            return (
-              <div key={day} className={`rounded-xl p-2 ${day === today ? 'bg-surface ring-1 ring-accent' : 'bg-surface/60'}`}>
-                <button type="button" className="flex min-h-9 w-full items-baseline gap-2 text-left" onClick={() => openDay(day)} aria-label={`Voir le ${formatLongDay(day)}`}>
-                  <span className="font-semibold">{WEEK_HEADERS[i]}</span>
-                  <span className="text-[13px] text-muted">{formatShortDay(day)}</span>
-                </button>
-                {items.length === 0 && <p className="text-[13px] text-muted">—</p>}
-                {items.map((item) => <ItemLine key={item.key} item={item} onEvent={openEvent} compact />)}
-              </div>
-            )
-          })}
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 7 }, (_, i) => addDays(monday, i)).map((day, i) => (
+            <WeekDay key={day} day={day} index={i} items={itemsOf(day)} today={today} onOpen={() => openDay(day)} onEvent={openEvent} />
+          ))}
         </div>
       )}
 
@@ -155,30 +305,30 @@ export function Agenda() {
           <div className="grid grid-cols-7 gap-1">
             {(() => {
               const first = firstOfMonth(anchor)
-              const start = mondayOf(first)
               const end = addDays(addMonths(first, 1), -1)
               const cells: string[] = []
-              for (let d = start; d <= end || cells.length % 7 !== 0; d = addDays(d, 1)) cells.push(d)
-              return cells.map((day) => {
-                const items = itemsOf(day)
-                const inMonth = day.slice(0, 7) === first.slice(0, 7)
-                return (
-                  <button key={day} type="button" onClick={() => openDay(day)} aria-label={`${formatLongDay(day)} : ${items.length} éléments`} className={`flex min-h-16 flex-col items-start gap-1 rounded-lg p-1.5 text-left lg:min-h-24 ${day === today ? 'bg-surface ring-1 ring-accent' : 'bg-surface/60'} ${inMonth ? '' : 'opacity-40'}`}>
-                    <span className="text-[13px] font-semibold tabular-nums">{Number(day.slice(8))}</span>
-                    <span className="flex flex-wrap gap-1">
-                      {items.slice(0, 8).map((item) => <Mark key={item.key} item={item} />)}
-                    </span>
-                    <span className="hidden w-full flex-col lg:flex">
-                      {items.filter((it) => it.kind !== 'habit').slice(0, 2).map((item) => (
-                        <span key={item.key} className={`truncate text-[12px] ${stateClass(item.state)}`}>{item.title}</span>
-                      ))}
-                    </span>
-                  </button>
-                )
-              })
+              for (let d = mondayOf(first); d <= end || cells.length % 7 !== 0; d = addDays(d, 1)) cells.push(d)
+              return cells.map((day) => (
+                <MonthCell key={day} day={day} items={itemsOf(day)} today={today} inMonth={day.slice(0, 7) === first.slice(0, 7)} onOpen={() => openDay(day)} />
+              ))
             })()}
           </div>
-          <p className="pt-2 text-[12px] text-muted">● habitude (pleine si faite) · ■ événement · □ tâche</p>
+          <p className="pt-2 text-[12px] text-muted">Barre verte : part des habitudes faites ce jour-là. Touchez un jour pour voir le détail.</p>
+        </div>
+      )}
+
+      {view !== 'month' && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-4 text-[12px] text-muted" aria-label="Légende">
+          {(['done', 'todo', 'missed', 'grace'] as ItemState[]).map((s) => (
+            <span key={s} className="flex items-center gap-1.5">
+              <StateIcon item={{ key: s, kind: 'habit', title: '', when: '', order: '', state: s, color: '#3f6b52' }} />
+              {STATE_LABELS[s]}
+            </span>
+          ))}
+          <span className="flex items-center gap-1.5">
+            <StateIcon item={{ key: 't', kind: 'task', title: '', when: '', order: '', state: 'todo', color: '#596159' }} />
+            tâche
+          </span>
         </div>
       )}
 

@@ -68,6 +68,7 @@ Principe : rester **simple**. On ne cherche pas à mesurer finement (litres d'ea
 
 **Fréquence**
 - Tous les jours (par défaut).
+- En semaine (lundi → vendredi) ou le week-end (samedi et dimanche), en un choix.
 - Certains jours de la semaine (ex. lundi, mercredi, vendredi).
 - X fois par semaine ou par mois, jours libres (ex. danse 3 fois par semaine).
 - Tous les N jours.

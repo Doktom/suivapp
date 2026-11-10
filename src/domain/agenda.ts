@@ -1,7 +1,7 @@
 import { addDays, mondayOf } from './date'
-import { isActiveOn, isDayDone, isDueOn, isQuota, periodDoneCount, quotaCount, type ValidationIndex } from './schedule'
+import { isActiveOn, isAvoidOk, isDayDone, isDueOn, isQuota, periodDoneCount, quotaCount, type ValidationIndex } from './schedule'
 import type { Streak } from './streak'
-import { MOMENT_LABELS, type CalendarEvent, type Family, type Habit, type Task } from './types'
+import { MOMENT_LABELS, type CalendarEvent, type Family, type Habit, type Moment, type Slip, type Task } from './types'
 
 export type ItemKind = 'habit' | 'task' | 'event'
 export type ItemState = 'done' | 'todo' | 'missed' | 'grace' | 'late'
@@ -16,6 +16,8 @@ export interface AgendaItem {
   order: string
   state: ItemState
   color: string
+  /** Habits: the moment of the day they belong to. */
+  moment?: Moment
   event?: CalendarEvent
 }
 
@@ -30,6 +32,7 @@ export interface AgendaSource {
   tasks: Task[]
   events: CalendarEvent[]
   families: Family[]
+  slips: Slip[]
 }
 
 const MOMENT_ORDER = { morning: '1', day: '2', evening: '3' } as const
@@ -61,6 +64,8 @@ export function agendaItems(
     for (const h of src.habits) {
       if (isQuota(h) || (filters.familyId && h.family_id !== filters.familyId) || !isDueOn(h, index, day)) continue
       const done = isDayDone(h, index, day)
+      // An avoid habit is lost as soon as its tolerance is exceeded, even before the day ends.
+      const lost = h.tracking === 'avoid' && !isAvoidOk(h, src.slips, day)
       const grace = streaks.get(h.id)?.graceDays.has(day) ?? false
       const moment = h.moments[0] ?? 'day'
       items.push({
@@ -69,8 +74,9 @@ export function agendaItems(
         title: h.name,
         when: h.time_of_day ?? h.moments.map((m) => MOMENT_LABELS[m]).join(', '),
         order: h.time_of_day ? `0${h.time_of_day}` : MOMENT_ORDER[moment],
-        state: done ? 'done' : day >= today ? 'todo' : grace ? 'grace' : 'missed',
+        state: done ? 'done' : lost ? 'missed' : day >= today ? 'todo' : grace ? 'grace' : 'missed',
         color: src.families.find((f) => f.id === h.family_id)?.color ?? '#9aa39a',
+        moment,
       })
     }
   }

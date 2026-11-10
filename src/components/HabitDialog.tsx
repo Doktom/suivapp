@@ -14,6 +14,7 @@ import {
   type Step,
   type Tracking,
 } from '../domain/types'
+import { WEEKEND, WORKWEEK, weekdaysPreset } from '../domain/describe'
 import { Button, Dialog, Field, inputClass } from './ui'
 
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -191,8 +192,14 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
   const toggleDay = (d: number) =>
     setFrequency({ type: 'weekdays', days: days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort() })
 
-  const changeFrequency = (type: Frequency['type']) => {
-    if (type === 'daily') setFrequency({ type })
+  /** "En semaine" and "Le week-end" are presets of the weekdays frequency. */
+  type FrequencyChoice = Frequency['type'] | 'workweek' | 'weekend'
+  const frequencyChoice: FrequencyChoice = frequency.type === 'weekdays' ? weekdaysPreset(frequency.days) ?? 'weekdays' : frequency.type
+
+  const changeFrequency = (type: FrequencyChoice) => {
+    if (type === 'workweek') setFrequency({ type: 'weekdays', days: WORKWEEK })
+    else if (type === 'weekend') setFrequency({ type: 'weekdays', days: WEEKEND })
+    else if (type === 'daily') setFrequency({ type })
     else if (type === 'weekdays') setFrequency({ type, days: [0, 2, 4] })
     else if (type === 'every_n') setFrequency({ type, interval: 2 })
     else setFrequency({ type, count: type === 'per_month' ? 4 : 3 })
@@ -240,15 +247,17 @@ export function HabitDialog({ habit, onClose }: { habit: Partial<Habit> | null; 
         {tracking === 'avoid' && <AvoidEditor avoid={avoid} onChange={setAvoid} />}
 
         <Field label="Fréquence">
-          <select className={inputClass} value={frequency.type} onChange={(e) => changeFrequency(e.target.value as Frequency['type'])}>
+          <select className={inputClass} value={frequencyChoice} onChange={(e) => changeFrequency(e.target.value as FrequencyChoice)}>
             <option value="daily">Tous les jours</option>
+            <option value="workweek">En semaine (lundi → vendredi)</option>
+            <option value="weekend">Le week-end (samedi et dimanche)</option>
             <option value="weekdays">Certains jours</option>
             <option value="per_week">X fois par semaine</option>
             <option value="per_month">X fois par mois</option>
             <option value="every_n">Tous les N jours</option>
           </select>
         </Field>
-        {frequency.type === 'weekdays' && (
+        {frequencyChoice === 'weekdays' && (
           <div className="flex justify-between">
             {WEEKDAYS.map((label, d) => (
               <button key={d} type="button" aria-label={WEEKDAY_NAMES[d]} aria-pressed={days.includes(d)} onClick={() => toggleDay(d)} className={`size-11 rounded-full text-sm font-medium ${days.includes(d) ? 'bg-accent text-white' : 'bg-chip'}`}>

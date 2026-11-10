@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HabitDialog } from '../components/HabitDialog'
-import { Button, Dialog, FamilyDot, SectionTitle } from '../components/ui'
+import { Button, Dialog, FamilyCard, SectionTitle, tint } from '../components/ui'
 import { useStore, useToday, useValidationIndex } from '../data/store'
 import { addDays } from '../domain/date'
 import { isPaused } from '../domain/schedule'
@@ -62,16 +62,24 @@ function Catalog({ onClose }: { onClose: () => void }) {
     setAdded((list) => [...list, t.id])
   }
 
-  const families = [...data.families].sort((a, b) => a.position - b.position)
+  const families = [...data.families].sort((a, b) => a.position - b.position).filter((f) => data.habit_templates.some((t) => t.family_id === f.id))
+  const [shown, setShown] = useState<string | null>(null)
   return (
     <Dialog title="Catalogue d'habitudes" onClose={onClose}>
-      <div className="flex max-h-[65dvh] flex-col gap-3 overflow-y-auto">
-        {families.map((f) => {
+      <div className="flex flex-wrap gap-1.5 pb-3" role="group" aria-label="Familles">
+        <button type="button" aria-pressed={shown === null} onClick={() => setShown(null)} className={`min-h-9 rounded-full px-3 text-[13px] font-medium ${shown === null ? 'bg-ink text-white' : 'bg-chip'}`}>Toutes</button>
+        {families.map((f) => (
+          <button key={f.id} type="button" aria-pressed={shown === f.id} onClick={() => setShown(shown === f.id ? null : f.id)} className="flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium" style={{ background: shown === f.id ? f.color : tint(f.color, 18), color: shown === f.id ? '#fff' : undefined }}>
+            {shown !== f.id && <span className="size-2 rounded-full" style={{ background: f.color }} aria-hidden="true" />}
+            {f.name}
+          </button>
+        ))}
+      </div>
+      <div className="flex max-h-[60dvh] flex-col gap-3 overflow-y-auto">
+        {families.filter((f) => shown === null || f.id === shown).map((f) => {
           const templates = data.habit_templates.filter((t) => t.family_id === f.id)
-          if (templates.length === 0) return null
           return (
-            <div key={f.id}>
-              <h3 className="flex items-center gap-2 pb-1 text-[13px] font-semibold text-muted"><FamilyDot color={f.color} />{f.name}</h3>
+            <FamilyCard key={f.id} name={f.name} color={f.color} stat={f.stat_name} count={templates.length}>
               {templates.map((t) => (
                 <div key={t.id} className="flex items-center gap-2 border-t border-line py-1.5">
                   <div className="min-w-0 flex-1">
@@ -82,7 +90,7 @@ function Catalog({ onClose }: { onClose: () => void }) {
                   <Button disabled={added.includes(t.id)} onClick={() => add(t)}>{added.includes(t.id) ? 'Ajoutée' : 'Ajouter'}</Button>
                 </div>
               ))}
-            </div>
+            </FamilyCard>
           )
         })}
       </div>
@@ -98,6 +106,7 @@ export function Habits() {
   const active = data.habits.filter((h) => !h.archived)
   const archived = data.habits.filter((h) => h.archived)
   const families = [...data.families].sort((a, b) => a.position - b.position)
+  const used = families.filter((f) => active.some((h) => h.family_id === f.id))
   const close = () => {
     setEditing(null)
     setCreating(false)
@@ -113,23 +122,33 @@ export function Habits() {
         </div>
       </div>
       {active.length === 0 && <p className="text-muted">Aucune habitude. Commencez par le catalogue.</p>}
-      <div className="flex flex-col gap-5">
-        {families.map((f) => {
+      {used.length > 1 && (
+        <nav aria-label="Aller à une famille" className="flex flex-wrap gap-1.5 pb-4">
+          {used.map((f) => (
+            <a key={f.id} href={`#habits`} onClick={(e) => { e.preventDefault(); document.getElementById(`family-${f.id}`)?.scrollIntoView({ behavior: 'smooth' }) }} className="flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium" style={{ background: tint(f.color, 18) }}>
+              <span className="size-2 rounded-full" style={{ background: f.color }} aria-hidden="true" />
+              {f.name}
+              <span className="text-muted tabular-nums">{active.filter((h) => h.family_id === f.id).length}</span>
+            </a>
+          ))}
+        </nav>
+      )}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        {used.map((f) => {
           const habits = active.filter((h) => h.family_id === f.id)
-          if (habits.length === 0) return null
           return (
-            <section key={f.id}>
-              <h2 className="flex items-center gap-2 pb-2 text-sm font-semibold"><FamilyDot color={f.color} />{f.name}</h2>
+            <FamilyCard key={f.id} id={`family-${f.id}`} name={f.name} color={f.color} stat={f.stat_name} count={habits.length}>
               {habits.map((h) => <HabitLine key={h.id} habit={h} onEdit={() => setEditing(h)} />)}
-            </section>
+            </FamilyCard>
           )
         })}
         {active.some((h) => !h.family_id) && (
-          <section>
-            <h2 className="pb-2 text-sm font-semibold">Sans famille</h2>
+          <FamilyCard name="Sans famille">
             {active.filter((h) => !h.family_id).map((h) => <HabitLine key={h.id} habit={h} onEdit={() => setEditing(h)} />)}
-          </section>
+          </FamilyCard>
         )}
+      </div>
+      <div className="pt-6">
         {archived.length > 0 && (
           <section>
             <SectionTitle>Archivées</SectionTitle>

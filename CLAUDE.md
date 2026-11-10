@@ -36,3 +36,4 @@ La spécification de référence est `docs/CAHIER_DES_CHARGES.md` : la lire avan
 - 2026-11-10 : checklists réutilisables = chaque lancement crée un nouveau bloc ; tâches récurrentes en deux modes (calendrier fixe ou après réalisation).
 - 2026-11-10 : agenda validé tel que spécifié ; habitudes « X fois par semaine » dans un bandeau « cette semaine » ; table événements dédiée.
 - 2026-11-10 : agenda en composant maison (pas FullCalendar) ; XP routine = 2 XP par étape faite + XP du niveau atteint ; écarts notés sur un jour passé comptent toujours ; crédit automatique des habitudes à éviter sur 30 jours en arrière au maximum.
+- 2026-11-10 : fréquences « En semaine » (lun.→ven.) et « Le week-end » (sam. et dim.) = préréglages de « certains jours » ; familles affichées en cartes colorées (Habitudes et catalogue) ; agenda semaine en lignes par jour (événements, habitudes par moment, tâches) avec icônes d'état, mois avec barre de progression.

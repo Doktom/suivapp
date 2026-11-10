@@ -2,9 +2,26 @@ import type { Avoid, Frequency, HabitShape } from './types'
 
 const WEEK_NAMES = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.']
 
+export const WORKWEEK = [0, 1, 2, 3, 4]
+export const WEEKEND = [5, 6]
+
+const same = (a: number[], b: number[]) => a.length === b.length && [...a].sort().every((d, i) => d === b[i])
+
+/** Is this set of days "Monday to Friday" or "Saturday and Sunday"? */
+export function weekdaysPreset(days: number[]): 'workweek' | 'weekend' | null {
+  if (same(days, WORKWEEK)) return 'workweek'
+  if (same(days, WEEKEND)) return 'weekend'
+  return null
+}
+
 export function describeFrequency(f: Frequency): string {
   if (f.type === 'daily') return 'Tous les jours'
-  if (f.type === 'weekdays') return f.days.map((d) => WEEK_NAMES[d]).join(', ')
+  if (f.type === 'weekdays') {
+    const preset = weekdaysPreset(f.days)
+    if (preset === 'workweek') return 'En semaine'
+    if (preset === 'weekend') return 'Le week-end'
+    return f.days.map((d) => WEEK_NAMES[d]).join(', ')
+  }
   if (f.type === 'per_week') return `${f.count} fois par semaine`
   if (f.type === 'per_month') return `${f.count} fois par mois`
   return f.interval <= 1 ? 'Tous les jours' : `Tous les ${f.interval} jours`

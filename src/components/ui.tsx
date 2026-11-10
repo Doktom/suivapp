@@ -90,3 +90,34 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 export function FamilyDot({ color }: { color?: string }) {
   return <span className="inline-block size-2.5 flex-none rounded-full" style={{ background: color ?? '#9aa39a' }} aria-hidden="true" />
 }
+
+/** A family's color, faded for backgrounds. */
+export const tint = (color: string | undefined, percent = 12) => `color-mix(in srgb, ${color ?? '#9aa39a'} ${percent}%, transparent)`
+
+/** A block grouping the habits of one family: colored edge, tinted header with the family name and its stat. */
+export function FamilyCard({
+  name,
+  color,
+  stat,
+  count,
+  id,
+  children,
+}: {
+  name: string
+  color?: string
+  stat?: string
+  count?: number
+  id?: string
+  children: ReactNode
+}) {
+  return (
+    <section id={id} className="shrink-0 scroll-mt-4 overflow-hidden rounded-xl border border-line bg-surface" style={{ borderLeft: `5px solid ${color ?? '#9aa39a'}` }}>
+      <h2 className="flex items-baseline gap-2 px-3 py-2" style={{ background: tint(color) }}>
+        <span className="font-display text-base font-semibold">{name}</span>
+        {stat && <span className="text-[13px] text-muted">· {stat}</span>}
+        {count !== undefined && <span className="ml-auto text-[13px] text-muted tabular-nums">{count}</span>}
+      </h2>
+      <div className="px-3 [&>*:first-child]:border-t-0">{children}</div>
+    </section>
+  )
+}
