@@ -22,6 +22,7 @@ import {
 import { DEFAULT_XP, levelsValidationXp, routineXp, taskXp, validationXp } from '../domain/xp'
 import { buildMobility } from '../training/mobility'
 import { buildProgram } from '../training/program'
+import { badgesXp, computeBadges, type Badge, type TrainingGoal } from '../training/achievements'
 import type { DanceClass, DanceFigure, DanceGoal, DanceSession } from '../training/dance'
 import type { Exercise, TrainingLog, TrainingSession, Wod } from '../training/types'
 import { repo, type Row, type Table } from './repo'
@@ -41,6 +42,7 @@ export interface Data {
   training_sessions: TrainingSession[]
   training_wods: Wod[]
   training_logs: TrainingLog[]
+  training_goals: TrainingGoal[]
   dance_classes: DanceClass[]
   dance_sessions: DanceSession[]
   dance_figures: DanceFigure[]
@@ -62,6 +64,7 @@ const TABLES: Table[] = [
   'training_sessions',
   'training_wods',
   'training_logs',
+  'training_goals',
   'dance_classes',
   'dance_sessions',
   'dance_figures',
@@ -482,15 +485,28 @@ export function useStreaks(): Map<string, Streak> {
   return useMemo(() => new Map(data.habits.map((h) => [h.id, computeStreak(h, index, today)])), [data.habits, index, today])
 }
 
+/** Training badges, recomputed when the training or dance data change. */
+export function useBadges(): Badge[] {
+  const { data } = useStore()
+  return useMemo(
+    () => computeBadges(data),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.training_logs, data.training_exercises, data.training_goals, data.dance_sessions, data.dance_figures, data.dance_goals],
+  )
+}
+
 export function useTotalXp() {
   const { data } = useStore()
+  const badges = useBadges()
   return (
     data.validations.reduce((s, v) => s + v.xp_earned, 0) +
     data.tasks.reduce((s, t) => s + t.xp_earned, 0) +
     data.training_logs.reduce((s, l) => s + l.xp_earned, 0) +
     data.dance_sessions.reduce((s, d) => s + d.xp_earned, 0) +
     data.dance_figures.reduce((s, f) => s + f.xp_earned, 0) +
-    data.dance_goals.reduce((s, g) => s + g.xp_earned, 0)
+    data.dance_goals.reduce((s, g) => s + g.xp_earned, 0) +
+    data.training_goals.reduce((s, g) => s + g.xp_earned, 0) +
+    badgesXp(badges)
   )
 }
 

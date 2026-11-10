@@ -194,6 +194,21 @@ create table if not exists training_logs (
   xp_earned int not null default 0
 );
 
+-- Objectifs sport.
+create table if not exists training_goals (
+  id uuid primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  title text not null,
+  measure text not null check (measure in ('weight', 'reps', 'sessions', 'volume')),
+  exercise_id uuid references training_exercises on delete set null,
+  target numeric not null default 1,
+  start_day date not null,
+  due_day date,
+  means jsonb not null default '[]',
+  achieved_on date,
+  xp_earned int not null default 0
+);
+
 -- Danse : cours fixes, séances (cours, soirées, pratique), figures, objectifs.
 create table if not exists dance_classes (
   id uuid primary key,
@@ -252,7 +267,7 @@ create table if not exists dance_goals (
 do $$
 declare t text;
 begin
-  foreach t in array array['training_exercises','training_sessions','training_wods','training_logs','dance_classes','dance_sessions','dance_figures','dance_goals'] loop
+  foreach t in array array['training_exercises','training_sessions','training_wods','training_logs','training_goals','dance_classes','dance_sessions','dance_figures','dance_goals'] loop
     execute format('alter table %I enable row level security', t);
     execute format('drop policy if exists owner_only on %I', t);
     execute format('create policy owner_only on %I for all using (auth.uid() = user_id) with check (auth.uid() = user_id)', t);

@@ -8,7 +8,7 @@
 |---|---|---|
 | V0.1 — MVP | Habitudes simples / durée / quantité, catalogue, séries et jour de grâce, XP et niveaux, tâches, listes, blocs | ✅ codée |
 | V0.2 — Profondeur | Niveaux, routines, habitudes à éviter, fréquences (mois, tous les N jours, semaine, week-end), tâches récurrentes, checklists, agenda jour / semaine / mois + événements ; annulation, agenda cliquable, suppression d'habitude, export JSON, thème sombre, XP réglables | ✅ codée |
-| V0.3 — Entraînement | Étape 1 : sport en salle, séance guidée, chrono, finisher · Étape 2 : progression, records, volume, éditeur de programme · Étape 3 : mobilité guidée au chrono · Étape 4 : danse (cours, soirées, figures, objectifs) | ✅ étapes 1 à 4 codées · ⬜ étape 5 |
+| V0.3 — Entraînement | Étape 1 : sport en salle, séance guidée, chrono, finisher · Étape 2 : progression, records, volume, éditeur de programme · Étape 3 : mobilité guidée au chrono · Étape 4 : danse (cours, soirées, figures, objectifs) | ✅ étapes 1 à 5 codées (étape 5 sur la branche `etape-5-ludique`) |
 | V0.4 — Confort | Statistiques générales et heatmaps, succès, PWA installable, rappels | ⬜ |
 
 Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur une base vierge (habitude, tâche, séance de sport, routine de mobilité, danse, agenda, progression) sans erreur dans la console, affichage vérifié à 375 px et sur PC, thème clair et sombre.
@@ -28,16 +28,20 @@ Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur 
 - Ajuster les routines de mobilité de départ et les finishers (ce sont des suggestions).
 - Ne pas ajouter d'habitudes sport, étirement ou « Cours de danse » : c'est l'Entraînement qui s'en charge. Si une routine d'étirement existe en habitude, l'importer depuis Entraînement → Mobilité.
 
-## Prochaine étape : V0.3 étape 5, le côté ludique
+## Étape 5 (côté ludique) : faite, sur la branche `etape-5-ludique`
 
-À proposer à l'utilisateur avant de coder (il valide la liste) :
-- **Objectifs sport** avec jauge, comme en danse (ex. « Squat 60 kg », « 12 séances ce mois »), avec les moyens d'y arriver.
-- **Badges** propres à l'entraînement : 10 / 50 / 100 séances, tonnage cumulé (1 t, 10 t…), séries de mobilité (7, 30 jours), figures maîtrisées, premier record.
-- **Bilan de la semaine** (sport, mobilité, danse) : séances, temps, volume, records, comparaison avec la semaine précédente.
-- **Records mis en valeur** : fil des derniers records, célébration plus marquée.
-- Peut-être : un encart « Entraînement du jour » sur l'écran Aujourd'hui (prochaine séance, routine du moment, cours du soir).
+- **Bilan de la semaine** : bandeau en haut de l'Entraînement (séances, kg, records, routines, danse, XP, badges) ; vue **Trophées** avec la semaine en cours ou la précédente, comparées à la semaine d'avant.
+- **Badges** : 23, calculés depuis l'historique (`src/training/achievements.ts`), +20 XP chacun, date d'obtention retrouvée.
+- **Objectifs sport** (Sport → Objectifs) : charge ou répétitions sur un exercice (meilleure performance), séances ou tonnage depuis le début ; moyens d'y arriver à cocher ; +50 XP une fois atteint.
+- **Records** : fil des derniers records (Sport → Séances et Trophées) ; la fin de séance affiche le gain sur l'ancien record et les badges débloqués.
+- Nouvelle table `training_goals` (ajoutée à `migration_v0.3.sql` et `schema.sql`).
 
-Ensuite : V0.4 (statistiques, succès, PWA, rappels), puis le programme « maison » à construire avec l'utilisateur.
+## Prochaine étape possible (à proposer avant de coder)
+
+- Encart « Entraînement du jour » sur l'écran Aujourd'hui (prochaine séance, routine du moment, cours du soir).
+- V0.4 : statistiques générales et heatmaps, PWA installable, rappels.
+- Programme « maison » à construire ensemble.
+- À la toute fin : version serveur sur atj-app.com (voir plus haut).
 
 ## Questions ouvertes
 - Programme de séances à la maison : à construire ensemble.
