@@ -1,4 +1,4 @@
-# Point d'étape et reprise — mis à jour le 10 novembre 2026 (V0.3 en ligne)
+# Point d'étape et reprise — mis à jour le 11 novembre 2026 (V0.4 en ligne, phase de test et d'ajustement)
 
 À lire en début de session (avec `CLAUDE.md`). À mettre à jour à chaque fin d'étape.
 
@@ -9,7 +9,7 @@
 | V0.1 — MVP | Habitudes simples / durée / quantité, catalogue, séries et jour de grâce, XP et niveaux, tâches, listes, blocs | ✅ codée |
 | V0.2 — Profondeur | Niveaux, routines, habitudes à éviter, fréquences (mois, tous les N jours, semaine, week-end), tâches récurrentes, checklists, agenda jour / semaine / mois + événements ; annulation, agenda cliquable, suppression d'habitude, export JSON, thème sombre, XP réglables | ✅ codée |
 | V0.3 — Entraînement | Étape 1 : sport en salle, séance guidée, chrono, finisher · Étape 2 : progression, records, volume, éditeur de programme · Étape 3 : mobilité guidée au chrono · Étape 4 : danse (cours, soirées, figures, objectifs) | ✅ étapes 1 à 5 codées et en ligne |
-| V0.4 — Confort | Statistiques générales et heatmaps, succès, PWA installable, rappels | ⬜ |
+| V0.4 — Confort | Encart « Entraînement du jour » (Aujourd'hui), statistiques et cartes de chaleur (Trophées), PWA installable, rappels (Réglages) | ✅ codée, en phase de test et d'ajustement |
 
 Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur une base vierge (habitude, tâche, séance de sport, routine de mobilité, danse, agenda, progression) sans erreur dans la console, affichage vérifié à 375 px et sur PC, thème clair et sombre.
 
@@ -40,10 +40,18 @@ Contrôles du point d'étape : 59 tests au vert, build OK, parcours complet sur 
 - **Records** : fil des derniers records (Sport → Séances et Trophées) ; la fin de séance affiche le gain sur l'ancien record et les badges débloqués.
 - Nouvelle table `training_goals` (ajoutée à `migration_v0.3.sql` et `schema.sql`).
 
-## Prochaine étape possible (à proposer avant de coder)
+## V0.4 (11 novembre 2026)
+- **Encart « Entraînement du jour »** sur Aujourd'hui : prochaine séance de sport, cours de danse du jour, routines de mobilité (cochées si faites). Logique : `src/training/today.ts`.
+- **Statistiques** (Trophées) : cartes de chaleur habitudes et entraînement sur 20 semaines, réussite par jour de la semaine, tendance sur 12 semaines. Logique : `src/domain/stats.ts`.
+- **PWA** : `public/manifest.webmanifest`, `public/sw.js` (réseau d'abord, cache en secours), icônes générées dans `public/icons/`. Installation : « Ajouter à l'écran d'accueil ».
+- **Rappels** (Réglages, par appareil) : matin et soir, résumé de ce qu'il reste à faire. Sans serveur, ils partent quand l'app est ouverte ou active en arrière-plan (`ReminderRunner`) ; de vrais rappels poussés viendront avec la version serveur. Sur iPhone, installer d'abord l'app.
+- Non vérifié : le service worker n'a pas pu s'enregistrer dans le navigateur intégré de Claude ; à tester sur un vrai téléphone / Chrome.
 
-- Encart « Entraînement du jour » sur l'écran Aujourd'hui (prochaine séance, routine du moment, cours du soir).
-- V0.4 : statistiques générales et heatmaps, PWA installable, rappels.
+## Prochaine étape : phase de test et d'ajustement
+Utilisateur teste l'app en ligne et note les ajustements ; Claude les traite et pousse sur `main`.
+
+## Autres pistes (à proposer avant de coder)
+
 - Programme « maison » à construire ensemble.
 - À la toute fin : version serveur sur atj-app.com (voir plus haut).
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../data/store'
+import { notificationsSupported, readReminders, showNotification, writeReminders, type ReminderSettings } from '../data/reminders'
 import { applyTheme, readTheme, type ThemeChoice } from '../data/theme'
 import type { XpSettings } from '../domain/types'
 import { DEFAULT_XP } from '../domain/xp'
@@ -92,6 +93,54 @@ export function ExportSetting() {
       <h2 className="pt-8 pb-1 font-display text-lg font-semibold">Mes données</h2>
       <p className="pb-3 text-[13px] text-muted">Un fichier JSON avec toutes vos habitudes, validations, tâches et événements ({count.toLocaleString('fr-FR')} éléments), à garder en sauvegarde.</p>
       <Button onClick={download}>Exporter mes données</Button>
+    </section>
+  )
+}
+
+export function ReminderSetting() {
+  const [settings, setSettings] = useState(readReminders)
+  const supported = notificationsSupported()
+  const [permission, setPermission] = useState(supported ? Notification.permission : 'denied')
+  const update = (next: ReminderSettings) => {
+    setSettings(next)
+    writeReminders(next)
+  }
+  const toggle = async () => {
+    if (settings.enabled) return update({ ...settings, enabled: false })
+    const result = supported && Notification.permission !== 'granted' ? await Notification.requestPermission() : permission
+    setPermission(result)
+    if (result === 'granted') {
+      update({ ...settings, enabled: true })
+      void showNotification('Suivapp', 'Les rappels sont activés sur cet appareil.')
+    }
+  }
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="pt-8 font-display text-lg font-semibold">Rappels (sur cet appareil)</h2>
+      {!supported ? (
+        <p className="text-[13px] text-muted">Ce navigateur ne gère pas les notifications. Sur iPhone, ajoutez d'abord l'app à l'écran d'accueil.</p>
+      ) : (
+        <>
+          <label className="flex min-h-11 items-center gap-3">
+            <input type="checkbox" className="size-5" checked={settings.enabled} onChange={toggle} />
+            <span>Activer les rappels</span>
+          </label>
+          {permission === 'denied' && <p role="alert" className="text-sm text-warn">Les notifications sont bloquées pour ce site : autorisez-les dans les réglages du navigateur.</p>}
+          {settings.enabled && (
+            <div className="flex flex-wrap gap-3">
+              {(['morning', 'evening'] as const).map((slot) => (
+                <label key={slot} className="flex items-center gap-2 text-sm">
+                  {slot === 'morning' ? 'Matin' : 'Soir'}
+                  <input type="time" className={`${inputClass} !w-auto`} value={settings[slot] ?? ''} onChange={(e) => update({ ...settings, [slot]: e.target.value || null })} />
+                </label>
+              ))}
+            </div>
+          )}
+          <p className="text-[13px] text-muted">
+            Le rappel résume ce qu'il reste à faire (habitudes, séance, cours). Sans serveur, il s'affiche quand l'app est ouverte ou installée et active en arrière-plan : au premier lancement après l'heure choisie sinon. Laisser un champ vide désactive ce rappel.
+          </p>
+        </>
+      )}
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { ExportSetting, ThemeSetting, XpSetting } from '../components/SettingsExtras'
+import { ExportSetting, ReminderSetting, ThemeSetting, XpSetting } from '../components/SettingsExtras'
 import { Button, Field, inputClass } from '../components/ui'
 import { supabase } from '../data/repo'
 import { useStore } from '../data/store'
@@ -72,6 +72,7 @@ export function Settings() {
         <Button type="submit">Ajouter</Button>
       </form>
 
+      <ReminderSetting />
       <XpSetting />
       <ExportSetting />
 

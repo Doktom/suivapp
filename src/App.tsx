@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout, type Route } from './components/Layout'
+import { ReminderRunner } from './components/ReminderRunner'
 import { Button, Field, inputClass } from './components/ui'
 import { supabase } from './data/repo'
 import { StoreProvider, useStoreStatus } from './data/store'
@@ -43,6 +44,7 @@ function Screens() {
   return (
     <Layout route={route} error={error}>
       <Page />
+      <ReminderRunner />
     </Layout>
   )
 }

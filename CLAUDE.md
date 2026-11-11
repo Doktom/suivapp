@@ -7,9 +7,10 @@ Webapp **personnelle** (un seul utilisateur) de suivi d'habitudes, de tâches, d
 - Point d'étape et suite du travail : `docs/REPRISE.md` (à lire en début de session, à mettre à jour en fin d'étape). La commande `/reprise` fait la mise en route.
 - Dépôt GitHub public : `Doktom/suivapp`. Production : https://doktom.github.io/suivapp/
 
-## État actuel (2026-11-10)
+## État actuel (2026-11-11)
 - **V0.1, V0.2 et V0.3 codées et en ligne** sur https://doktom.github.io/suivapp/ (V0.3 = Entraînement : sport, suivi du sport, mobilité, danse, et l'étape 5 « ludique » avec l'onglet Trophées). **La prochaine étape est à choisir avec l'utilisateur** : pistes dans `docs/REPRISE.md`.
-- Version `package.json` : 0.3.0. 72 tests (Vitest) au vert, build OK.
+- **V0.4 en ligne** (encart Entraînement du jour, statistiques / cartes de chaleur, PWA, rappels) : on est en **phase de test et d'ajustement**.
+- Version `package.json` : 0.4.0. 81 tests (Vitest) au vert, build OK.
 - **Phase de test** : le site GitHub Pages est construit **sans Supabase**, donc sans connexion ; les données restent dans le navigateur. Version finale prévue sur le serveur privé **atj-app.com** (o2switch, PHP + SQLite, sans login) : voir `docs/REPRISE.md`.
 
 ## Façon de travailler avec l'utilisateur
@@ -47,6 +48,7 @@ src/
     automation.ts            crédit auto des habitudes à éviter, tâches récurrentes, ordre des sous-tâches
     agenda.ts                éléments de l'agenda (habitudes, tâches, événements, entraînement, danse)
     fun.ts                   ludique des habitudes : journées / semaines / mois parfaits, séries, victoires, stats décalées, badges
+    stats.ts                 cartes de chaleur, réussite par jour de semaine, tendance
     catalog.ts, describe.ts, recurrence.ts, date.ts
   training/                  MODULE ENTRAÎNEMENT (autonome ; tables training_* et dance_*)
     types.ts                 exercices, séances-types (items exercise / circuit / hold), WODs, journaux
@@ -54,6 +56,7 @@ src/
     logic.ts, stats.ts       rotation, pré-remplissage, records, volume, XP ; historique, prescriptions « 2x15 / 3x10 »
     mobility.ts              routines de départ, étapes guidées, XP, série de jours, import des routines d'habitudes
     dance.ts                 cours fixes, temps par danse, objectifs, XP
+    today.ts                 « Entraînement du jour » (Aujourd'hui)
     achievements.ts          objectifs sport, fil des records, badges, bilan de la semaine
     Trophies, SportGoals     briques Trophées (bandeau de la semaine, badges, fil des records) ; objectifs sport
     TrainingPage.tsx         onglet Sport / Mobilité / Danse, reprise d'une séance en cours
@@ -115,3 +118,4 @@ docs/                        CAHIER_DES_CHARGES.md, REPRISE.md
 - 2026-11-10 : plus de connexion par e-mail. Phase de test sur GitHub Pages sans Supabase (données dans le navigateur, export JSON pour sauvegarder) ; Claude pousse directement sur `main`. Version finale à la toute fin sur atj-app.com (o2switch : PHP + SQLite, dossier protégé par mot de passe via cPanel, pas d'écran de connexion, import de l'export JSON).
 - 2026-11-10 : étape 5 (branche `etape-5-ludique`, à la demande de l'utilisateur) : badges calculés depuis l'historique (aucune table, +20 XP chacun, comptés dans l'XP totale), objectifs sport en table `training_goals` (+50 XP, caractéristique Force), bilan de la semaine comparé à la précédente, fil des records ; segment « Trophées » dans l'Entraînement.
 - 2026-11-10 : onglet dédié **Trophées** (remplace Progression, route `#progress` gardée) pour toute la ludification, habitudes comprises : bilan commun, petites victoires, régularité (journée parfaite = toutes les habitudes à jours fixes du jour faites ; semaine complète = un oubli max par habitude + quotas tenus ; mois complet ≥ 90 %), stats décalées, badges habitudes et tâches. Barre du bas à 6 onglets sur téléphone (Réglages en haut).
+- 2026-11-11 : V0.4 : encart « Entraînement du jour », statistiques et cartes de chaleur dans Trophées, PWA (manifest + service worker réseau d'abord), rappels matin / soir par appareil (notifications locales, app ouverte). Puis phase de test et d'ajustement.

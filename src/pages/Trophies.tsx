@@ -15,6 +15,7 @@ import {
   streakBoard,
   type Victory,
 } from '../domain/fun'
+import { StatsSection } from './StatsSection'
 import { levelFromXp } from '../domain/xp'
 import { BADGE_GROUP_LABELS, recordFeed, weekSummary, type BadgeGroup } from '../training/achievements'
 import { formatMinutes, STYLE_LABELS } from '../training/dance'
@@ -227,6 +228,8 @@ export function Trophies() {
           {board.every((b) => b.best === 0) && <p className="text-[13px] text-muted">Les séries de tes habitudes s'afficheront ici.</p>}
         </Card>
       </div>
+
+      <StatsSection />
 
       <section className="flex flex-col gap-3">
         <SectionTitle>Stats décalées</SectionTitle>

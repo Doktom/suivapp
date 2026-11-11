@@ -7,6 +7,7 @@ import { addDays, clockTime, formatLongDay } from '../domain/date'
 import { isAvoidOk, isAvoidSettled, isDayDone, isDueOn } from '../domain/schedule'
 import { MOMENT_LABELS, MOMENTS } from '../domain/types'
 import { levelFromXp } from '../domain/xp'
+import { TrainingToday } from '../training/TodayCard'
 
 /** How many past days can be corrected. */
 const MAX_CORRECTION_DAYS = 13
@@ -92,11 +93,14 @@ export function Today() {
           ))}
         </section>
 
-        <section className="pt-5 lg:pt-0">
+        <div className="pt-5 lg:pt-0">
+        {day === today && <TrainingToday />}
+        <section>
           <div className="pb-2"><SectionTitle>Tâches</SectionTitle></div>
           {tasks.length === 0 && <p className="border-t border-line py-4 text-muted">Aucune tâche due ce jour.</p>}
           {tasks.map((t) => <TaskItem key={t.id} task={t} today={today} />)}
         </section>
+        </div>
       </div>
     </>
   )
